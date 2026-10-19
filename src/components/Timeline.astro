@@ -1,0 +1,236 @@
+---
+import EventFormFields from './EventFormFields.astro';
+import { EVENT_TYPE_LABELS } from '../lib/validation/event';
+import { formatDateTime } from '../lib/dates';
+import { renderMarkdown } from '../lib/markdown';
+import { splitTimeline } from '../lib/timeline';
+
+interface Props {
+  jobId: string;
+  events: {
+    id: string;
+    type: string;
+    occurredAt: Date;
+    title: string;
+    body: string;
+    contactName: string | null;
+    contactEmail: string | null;
+    contactRole: string | null;
+  }[];
+  error?: string | null;
+}
+
+const { jobId, events, error } = Astro.props;
+const { upcoming, past } = splitTimeline(events);
+const label = (t: string) => EVENT_TYPE_LABELS[t as keyof typeof EVENT_TYPE_LABELS] ?? t;
+const groups = [
+  { key: 'upcoming', heading: 'Upcoming', items: upcoming },
+  { key: 'past', heading: upcoming.length > 0 ? 'History' : null, items: past },
+];
+---
+
+<section id="timeline" class="card timeline-card" aria-labelledby="timeline-heading">
+  <h2 id="timeline-heading">Timeline</h2>
+
+  {error && <p class="form-error" role="alert">{error}</p>}
+
+  <details id="add-event" class="add-event" open={!!error || events.length === 0}>
+    <summary class="btn btn-sm">+ Add event</summary>
+    <form method="POST" action={`/api/jobs/${jobId}/events`} class="event-form">
+      <EventFormFields idPrefix="new-event" />
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-sm">Save event</button>
+      </div>
+    </form>
+  </details>
+
+  {events.length === 0 ? (
+    <p class="empty-state">No events logged yet.</p>
+  ) : (
+    groups.map((group) =>
+      group.items.length === 0 ? null : (
+        <div class={`timeline-group timeline-${group.key}`}>
+          {group.heading && <h3 class="timeline-group-heading">{group.heading}</h3>}
+          <ol class="timeline">
+            {group.items.map((evt) => (
+              <li id={`event-${evt.id}`} class={`timeline-event type-${evt.type}`}>
+                <div class="event-header">
+                  <span class="event-type badge">{label(evt.type)}</span>
+                  <time class="event-time" datetime={evt.occurredAt.toISOString()}>
+                    {formatDateTime(evt.occurredAt)}
+                  </time>
+                </div>
+                <p class="event-title">{evt.title}</p>
+                {evt.body && <div class="event-body" set:html={renderMarkdown(evt.body)} />}
+                {(evt.contactName || evt.contactEmail || evt.contactRole) && (
+                  <p class="event-contact">
+                    {[evt.contactName, evt.contactRole].filter(Boolean).join(', ')}
+                    {evt.contactEmail && (
+                      <>
+                        {' '}
+                        <a href={`mailto:${evt.contactEmail}`}>{evt.contactEmail}</a>
+                      </>
+                    )}
+                  </p>
+                )}
+                <div class="event-actions no-print">
+                  <details class="event-edit">
+                    <summary class="btn btn-sm">Edit</summary>
+                    <form method="POST" action={`/api/events/${evt.id}`} class="event-form">
+                      <input type="hidden" name="_method" value="PATCH" />
+                      <EventFormFields idPrefix={`edit-${evt.id}`} event={evt} />
+                      <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-sm">Save changes</button>
+                      </div>
+                    </form>
+                  </details>
+                  <form method="POST" action={`/api/events/${evt.id}`} class="event-delete" data-confirm="Delete this event?">
+                    <input type="hidden" name="_method" value="DELETE" />
+                    <button type="submit" class="btn btn-sm btn-danger">
+                      Delete<span class="sr-only"> event “{evt.title}”</span>
+                    </button>
+                  </form>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )
+    )
+  )}
+</section>
+
+<script>
+  document.querySelectorAll<HTMLFormElement>('form[data-confirm]').forEach((form) => {
+    form.addEventListener('submit', (e) => {
+      if (!confirm(form.dataset.confirm)) e.preventDefault();
+    });
+  });
+</script>
+
+<style>
+  .timeline-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .timeline-card h2 {
+    font-size: 1.125rem;
+  }
+  .add-event > summary,
+  .event-edit > summary {
+    list-style: none;
+    width: fit-content;
+  }
+  .add-event > summary::-webkit-details-marker,
+  .event-edit > summary::-webkit-details-marker {
+    display: none;
+  }
+  .event-form {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    background-color: var(--bg-primary);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+  .form-error {
+    color: var(--danger);
+    background-color: var(--danger-subtle);
+    border: 1px solid var(--danger-border);
+    border-radius: var(--radius-md);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+  .timeline-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .timeline-group-heading {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+  .timeline-upcoming .timeline-event {
+    border-left-color: var(--primary);
+    background-color: var(--primary-subtle);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+  .timeline {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .timeline-event {
+    border-left: 2px solid var(--border-subtle);
+    padding-left: 0.75rem;
+    padding-right: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .timeline-event:target {
+    border-left-color: var(--primary);
+  }
+  .event-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+  .event-time {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .event-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .event-body {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    overflow-wrap: anywhere;
+  }
+  .event-body :global(p + p),
+  .event-body :global(ul),
+  .event-body :global(ol) {
+    margin-top: 0.4rem;
+  }
+  .event-body :global(ul),
+  .event-body :global(ol) {
+    padding-left: 1.25rem;
+  }
+  .event-contact {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+  .event-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.4rem;
+    margin-top: 0.25rem;
+  }
+  .event-edit[open] {
+    flex-basis: 100%;
+    order: 1;
+  }
+  .empty-state {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+</style>

@@ -1,0 +1,113 @@
+---
+import { EVENT_TYPE_LABELS, USER_EVENT_TYPES } from '../lib/validation/event';
+import { toDateTimeLocalValue } from '../lib/dates';
+
+interface Props {
+  /** Unique prefix so ids stay distinct when several forms are on the page. */
+  idPrefix: string;
+  event?: {
+    type: string;
+    occurredAt: Date | string;
+    title: string;
+    body: string | null;
+    contactName: string | null;
+    contactEmail: string | null;
+    contactRole: string | null;
+  };
+}
+
+const { idPrefix, event } = Astro.props;
+const types: string[] = [...USER_EVENT_TYPES];
+if (event && !types.includes(event.type)) types.push(event.type);
+const occurredAt = toDateTimeLocalValue(event ? new Date(event.occurredAt) : new Date());
+const id = (name: string) => `${idPrefix}-${name}`;
+---
+
+<div class="event-fields">
+  <div class="field-row">
+    <div class="field">
+      <label for={id('type')}>Type</label>
+      <select id={id('type')} name="type" class="select">
+        {types.map((t) => (
+          <option value={t} selected={(event?.type ?? 'note') === t}>
+            {EVENT_TYPE_LABELS[t as keyof typeof EVENT_TYPE_LABELS] ?? t}
+          </option>
+        ))}
+      </select>
+    </div>
+    <div class="field">
+      <label for={id('occurredAt')}>Date &amp; time</label>
+      <input type="datetime-local" id={id('occurredAt')} name="occurredAt" class="input" value={occurredAt} required />
+    </div>
+  </div>
+  <div class="field">
+    <label for={id('title')}>Title</label>
+    <input type="text" id={id('title')} name="title" class="input" value={event?.title ?? ''} required maxlength="300" />
+  </div>
+  <div class="field">
+    <label for={id('body')}>Notes <span class="hint">(Markdown)</span></label>
+    <textarea id={id('body')} name="body" class="textarea" rows="4">{event?.body ?? ''}</textarea>
+  </div>
+  <fieldset class="contact-fields">
+    <legend>Contact <span class="hint">(optional)</span></legend>
+    <div class="field">
+      <label for={id('contactName')}>Name</label>
+      <input type="text" id={id('contactName')} name="contactName" class="input" value={event?.contactName ?? ''} />
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label for={id('contactRole')}>Role</label>
+        <input type="text" id={id('contactRole')} name="contactRole" class="input" value={event?.contactRole ?? ''} />
+      </div>
+      <div class="field">
+        <label for={id('contactEmail')}>Email</label>
+        <input type="email" id={id('contactEmail')} name="contactEmail" class="input" value={event?.contactEmail ?? ''} />
+      </div>
+    </div>
+  </fieldset>
+</div>
+
+<style>
+  .event-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.625rem;
+  }
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+  .field label,
+  .contact-fields legend {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .hint {
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+  .contact-fields {
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 0.5rem 0.75rem 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .contact-fields legend {
+    padding: 0 0.25rem;
+  }
+  @media (max-width: 400px) {
+    .field-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

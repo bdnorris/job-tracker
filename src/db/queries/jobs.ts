@@ -1,6 +1,15 @@
 import { db, schema } from '../client';
-import { eq, and, sql, desc, asc, ilike, or, isNull, isNotNull, lte } from 'drizzle-orm';
+import { eq, and, sql, desc, asc, ilike, or, isNull, isNotNull, lt, lte, gt, inArray } from 'drizzle-orm';
+import config from '../../config';
 import type { CreateJobInput, UpdateJobInput } from '../../lib/validation/job';
+import { INTERVIEW_EVENT_TYPES } from '../../lib/validation/event';
+import { todayInTz } from '../../lib/dates';
+
+const stageLabel = (id: string) => config.pipeline.stages.find((s) => s.id === id)?.label ?? id;
+
+export class NotFoundError extends Error {
+  code = 'NOT_FOUND';
+}
 
 export async function createJob(input: CreateJobInput) {
   // 1. Check duplicate URL
@@ -103,7 +112,7 @@ export async function createJob(input: CreateJobInput) {
     jobId: newJob.id,
     type: isApplied ? 'applied' : 'note',
     title: isApplied ? 'Applied for role' : 'Job created',
-    body: `Job added to tracker under **${input.status}**`,
+    body: `Job added to tracker under **${stageLabel(input.status)}**`,
     occurredAt: now,
     createdAt: now,
     updatedAt: now,
@@ -156,6 +165,7 @@ export interface ListJobsFilters {
   remoteType?: string;
   salaryMin?: number;
   search?: string;
+  skill?: string;
   hasOverdueAction?: boolean;
   includeArchived?: boolean;
 }
@@ -176,15 +186,23 @@ export async function listJobs(filters: ListJobsFilters = {}) {
   }
 
   if (filters.salaryMin) {
-    conditions.push(sql`${schema.jobs.salaryMin} >= ${filters.salaryMin} OR ${schema.jobs.salaryMax} >= ${filters.salaryMin}`);
+    conditions.push(sql`(${schema.jobs.salaryMin} >= ${filters.salaryMin} OR ${schema.jobs.salaryMax} >= ${filters.salaryMin})`);
+  }
+
+  if (filters.skill) {
+    conditions.push(sql`exists (
+      select 1 from ${schema.jobSkills}
+      inner join ${schema.skills} on ${schema.skills.id} = ${schema.jobSkills.skillId}
+      where ${schema.jobSkills.jobId} = ${schema.jobs.id} and lower(${schema.skills.name}) = lower(${filters.skill})
+    )`);
   }
 
   if (filters.hasOverdueAction) {
-    const today = new Date().toISOString().split('T')[0];
+    // Overdue means strictly before today in the app timezone.
     conditions.push(
       and(
         isNotNull(schema.jobs.nextActionDate),
-        lte(schema.jobs.nextActionDate, today)
+        lt(schema.jobs.nextActionDate, todayInTz())
       )
     );
   }
@@ -243,7 +261,7 @@ export async function updateJob(id: string, input: UpdateJobInput) {
     .limit(1);
 
   if (existingList.length === 0) {
-    throw new Error(`Job not found with id ${id}`);
+    throw new NotFoundError(`Job not found with id ${id}`);
   }
 
   const existing = existingList[0];
@@ -282,8 +300,8 @@ export async function updateJob(id: string, input: UpdateJobInput) {
     await db.insert(schema.events).values({
       jobId: id,
       type: 'status_change',
-      title: `Status changed to ${input.status}`,
-      body: `Status moved from **${existing.status}** to **${input.status}**`,
+      title: `Moved to ${stageLabel(input.status)}`,
+      body: `Status moved from **${stageLabel(existing.status)}** to **${stageLabel(input.status)}**`,
       meta: { from: existing.status, to: input.status },
       occurredAt: now,
       createdAt: now,
@@ -348,4 +366,85 @@ export async function deleteJob(id: string) {
     .where(eq(schema.jobs.id, id))
     .returning();
   return deleted;
+}
+
+/** Distinct skill names attached to at least one job, for filter dropdowns. */
+export async function listSkillNames() {
+  const rows = await db
+    .selectDistinct({ name: schema.skills.name })
+    .from(schema.skills)
+    .innerJoin(schema.jobSkills, eq(schema.jobSkills.skillId, schema.skills.id))
+    .orderBy(asc(schema.skills.name));
+  return rows.map((r) => r.name);
+}
+
+export async function getDashboardStats() {
+  const today = todayInTz();
+  const now = new Date();
+  const days = (n: number) => new Date(now.getTime() - n * 86400000);
+
+  const [stageCounts, appliedCounts, actionJobs, upcoming] = await Promise.all([
+    db
+      .select({ status: schema.jobs.status, count: sql<number>`count(*)::int` })
+      .from(schema.jobs)
+      .where(isNull(schema.jobs.archivedAt))
+      .groupBy(schema.jobs.status),
+    db
+      .select({
+        last7: sql<number>`count(*) filter (where ${schema.jobs.appliedAt} >= ${days(7).toISOString()})::int`,
+        last30: sql<number>`count(*) filter (where ${schema.jobs.appliedAt} >= ${days(30).toISOString()})::int`,
+      })
+      .from(schema.jobs),
+    db
+      .select({
+        id: schema.jobs.id,
+        title: schema.jobs.title,
+        company: schema.jobs.company,
+        nextAction: schema.jobs.nextAction,
+        nextActionDate: schema.jobs.nextActionDate,
+      })
+      .from(schema.jobs)
+      .where(
+        and(
+          isNull(schema.jobs.archivedAt),
+          isNotNull(schema.jobs.nextActionDate),
+          lte(schema.jobs.nextActionDate, today)
+        )
+      )
+      .orderBy(asc(schema.jobs.nextActionDate))
+      .limit(20),
+    db
+      .select({
+        id: schema.events.id,
+        jobId: schema.events.jobId,
+        type: schema.events.type,
+        title: schema.events.title,
+        occurredAt: schema.events.occurredAt,
+        jobTitle: schema.jobs.title,
+        company: schema.jobs.company,
+      })
+      .from(schema.events)
+      .innerJoin(schema.jobs, eq(schema.events.jobId, schema.jobs.id))
+      .where(
+        and(
+          isNull(schema.jobs.archivedAt),
+          inArray(schema.events.type, [...INTERVIEW_EVENT_TYPES]),
+          gt(schema.events.occurredAt, now)
+        )
+      )
+      .orderBy(asc(schema.events.occurredAt))
+      .limit(10),
+  ]);
+
+  const countsByStage: Record<string, number> = {};
+  for (const row of stageCounts) countsByStage[row.status] = row.count;
+
+  return {
+    today,
+    countsByStage,
+    appliedLast7: appliedCounts[0]?.last7 ?? 0,
+    appliedLast30: appliedCounts[0]?.last30 ?? 0,
+    dueActions: actionJobs.map((j) => ({ ...j, overdue: (j.nextActionDate ?? '') < today })),
+    upcomingInterviews: upcoming,
+  };
 }

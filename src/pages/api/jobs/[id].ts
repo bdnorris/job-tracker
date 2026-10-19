@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { getJobById, updateJob, deleteJob } from '../../../db/queries/jobs';
+import { getJobById, updateJob, deleteJob, NotFoundError } from '../../../db/queries/jobs';
 import { UpdateJobSchema } from '../../../lib/validation/job';
 
 export const GET: APIRoute = async ({ params }) => {
@@ -110,6 +110,12 @@ export const PATCH: APIRoute = async ({ params, request, redirect }) => {
     }
     return redirect(`/jobs/${id}`);
   } catch (err: any) {
+    if (err instanceof NotFoundError) {
+      return new Response(
+        JSON.stringify({ error: { code: 'NOT_FOUND', message: 'Job not found' } }),
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
     return new Response(
       JSON.stringify({
         error: { code: 'INTERNAL_ERROR', message: err.message || 'Failed to update job' },

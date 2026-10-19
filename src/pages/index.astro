@@ -1,23 +1,44 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import Board, { type BoardJob } from '../components/Board';
+import DashboardStrip from '../components/DashboardStrip.astro';
 import config from '../config';
-import { listJobs } from '../db/queries/jobs';
-import { computeMatchScore } from '../lib/skills/match';
+import { listJobs, getDashboardStats } from '../db/queries/jobs';
+import { computeMatchScore, isSkillMatched } from '../lib/skills/match';
+import { formatSalary, REMOTE_LABELS } from '../lib/format';
+import { formatDate } from '../lib/dates';
 
-const jobs = await listJobs({ includeArchived: false });
-const stages = config.pipeline.stages;
-const today = new Date().toISOString().split('T')[0];
+const [jobs, stats] = await Promise.all([listJobs({ includeArchived: false }), getDashboardStats()]);
+const today = stats.today;
+const stageIds = new Set(config.pipeline.stages.map((s) => s.id));
 
-// Group jobs by stage
-const jobsByStage: Record<string, typeof jobs> = {};
-for (const stage of stages) {
-  jobsByStage[stage.id] = [];
-}
-for (const job of jobs) {
-  if (jobsByStage[job.status]) {
-    jobsByStage[job.status].push(job);
-  }
-}
+const boardJobs: BoardJob[] = jobs
+  // Jobs whose status was removed from config can't be placed on the board; they remain in the list view.
+  .filter((job) => stageIds.has(job.status))
+  .map((job) => {
+    const skills = job.skills.map((s) => ({ name: s.name, matched: isSkillMatched(s.name) }));
+    const topSkills = [...skills.filter((s) => s.matched), ...skills.filter((s) => !s.matched)].slice(0, 3);
+    return {
+      id: job.id,
+      title: job.title,
+      company: job.company,
+      status: job.status,
+      boardOrder: job.boardOrder,
+      salary: formatSalary(job),
+      remoteLabel: REMOTE_LABELS[job.remoteType] ?? job.remoteType,
+      topSkills,
+      matchScore: computeMatchScore(job.skills),
+      nextAction: job.nextAction,
+      nextActionDate: job.nextActionDate,
+      nextActionLabel: job.nextActionDate ? formatDate(job.nextActionDate) : null,
+      overdue: !!job.nextActionDate && job.nextActionDate < today,
+      dueToday: job.nextActionDate === today,
+    };
+  });
+
+const activeCount = boardJobs.filter(
+  (j) => !config.pipeline.stages.find((s) => s.id === j.status)?.closed
+).length;
 ---
 
 <Layout title="Board">
@@ -25,84 +46,17 @@ for (const job of jobs) {
     <div class="board-header">
       <div>
         <h1>Job Pipeline</h1>
-        <p class="subtitle">{jobs.length} active job applications</p>
+        <p class="subtitle">{activeCount} active job{activeCount === 1 ? '' : 's'}</p>
       </div>
       <div class="header-actions">
-        <a href="/jobs" class="btn">Table View</a>
+        <a href="/jobs" class="btn">List view</a>
         <a href="/jobs/new" class="btn btn-primary">+ Add Job</a>
       </div>
     </div>
 
-    <!-- Board Columns -->
-    <div class="board-columns">
-      {stages.map((stage) => {
-        const stageJobs = jobsByStage[stage.id] || [];
-        return (
-          <div class="board-column">
-            <div class="column-header">
-              <span class="column-title">{stage.label}</span>
-              <span class="column-count badge">{stageJobs.length}</span>
-            </div>
+    <DashboardStrip stats={stats} />
 
-            <div class="column-cards">
-              {stageJobs.map((job) => {
-                const matchScore = computeMatchScore(job.skills);
-                const isOverdue = job.nextActionDate && job.nextActionDate < today;
-
-                let salaryFmt = '';
-                if (job.salaryMin && job.salaryMax) {
-                  salaryFmt = `${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}`;
-                } else if (job.salaryMin) {
-                  salaryFmt = `${job.salaryMin.toLocaleString()}+`;
-                }
-
-                return (
-                  <div class="card job-card">
-                    <div class="card-top">
-                      <a href={`/jobs/${job.id}`} class="card-title">
-                        {job.title}
-                      </a>
-                      <span class="card-company">{job.company}</span>
-                    </div>
-
-                    <div class="card-badges">
-                      <span class="badge">{job.remoteType}</span>
-                      {matchScore > 0 && (
-                        <span class="badge match-badge">{matchScore}% match</span>
-                      )}
-                      {salaryFmt && (
-                        <span class="card-salary">{salaryFmt}</span>
-                      )}
-                    </div>
-
-                    {job.skills && job.skills.length > 0 && (
-                      <div class="card-skills">
-                        {job.skills.slice(0, 3).map((s) => (
-                          <span class="skill-tag">{s.name}</span>
-                        ))}
-                      </div>
-                    )}
-
-                    {job.nextAction && (
-                      <div class={`card-action ${isOverdue ? 'overdue' : ''}`}>
-                        <span class="action-label">Next:</span> {job.nextAction}
-                        {job.nextActionDate && <span>({job.nextActionDate})</span>}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-
-              {stageJobs.length === 0 && (
-                <div class="empty-column-placeholder">
-                  No jobs
-                </div>
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
+    <Board client:load stages={config.pipeline.stages} jobs={boardJobs} />
   </div>
 </Layout>
 
@@ -110,12 +64,14 @@ for (const job of jobs) {
   .board-page {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
   .board-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
   }
   .board-header h1 {
     font-size: 1.75rem;
@@ -129,116 +85,5 @@ for (const job of jobs) {
   .header-actions {
     display: flex;
     gap: 0.5rem;
-  }
-  .board-columns {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: minmax(280px, 1fr);
-    gap: 1rem;
-    overflow-x: auto;
-    padding-bottom: 1rem;
-    min-height: calc(100vh - 200px);
-  }
-  .board-column {
-    background-color: var(--bg-subtle);
-    border-radius: var(--radius-lg);
-    display: flex;
-    flex-direction: column;
-    min-width: 280px;
-    border: 1px solid var(--border-subtle);
-  }
-  .column-header {
-    padding: 0.875rem 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border-subtle);
-  }
-  .column-title {
-    font-weight: 600;
-    font-size: 0.875rem;
-    color: var(--text-primary);
-  }
-  .column-count {
-    background-color: var(--bg-surface);
-    color: var(--text-muted);
-    font-size: 0.75rem;
-  }
-  .column-cards {
-    padding: 0.75rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    flex: 1;
-    overflow-y: auto;
-  }
-  .job-card {
-    padding: 0.875rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    box-shadow: var(--shadow-sm);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-  }
-  .job-card:hover {
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-md);
-  }
-  .card-top {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-  }
-  .card-title {
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--text-primary);
-  }
-  .card-company {
-    font-size: 0.825rem;
-    color: var(--text-secondary);
-  }
-  .card-badges {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.75rem;
-  }
-  .card-salary {
-    font-weight: 600;
-    color: var(--primary);
-  }
-  .card-skills {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-  }
-  .skill-tag {
-    font-size: 0.7rem;
-    padding: 0.1rem 0.4rem;
-    border-radius: var(--radius-sm);
-    background-color: var(--bg-subtle);
-    color: var(--text-secondary);
-    border: 1px solid var(--border-subtle);
-  }
-  .card-action {
-    font-size: 0.75rem;
-    color: var(--text-muted);
-    padding-top: 0.4rem;
-    border-top: 1px dashed var(--border-subtle);
-  }
-  .card-action.overdue {
-    color: var(--danger);
-    font-weight: 600;
-  }
-  .action-label {
-    font-weight: 600;
-  }
-  .empty-column-placeholder {
-    color: var(--text-muted);
-    font-size: 0.8rem;
-    text-align: center;
-    padding: 2rem 0;
   }
 </style>

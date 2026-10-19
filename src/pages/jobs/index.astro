@@ -1,29 +1,69 @@
 ---
 import Layout from '../../layouts/Layout.astro';
 import config from '../../config';
-import { listJobs } from '../../db/queries/jobs';
+import { listJobs, listSkillNames } from '../../db/queries/jobs';
 import { computeMatchScore } from '../../lib/skills/match';
+import { parseSort, sortJobs, DEFAULT_DIR, type SortKey } from '../../lib/jobs/sort';
+import { formatSalary, REMOTE_LABELS } from '../../lib/format';
+import { formatDate, todayInTz } from '../../lib/dates';
 
 const url = Astro.url;
 const status = url.searchParams.get('status') || '';
 const remoteType = url.searchParams.get('remoteType') || '';
 const salaryMinStr = url.searchParams.get('salaryMin') || '';
 const search = url.searchParams.get('search') || '';
+const skill = url.searchParams.get('skill') || '';
 const hasOverdueAction = url.searchParams.get('hasOverdueAction') === 'true';
 const includeArchived = url.searchParams.get('includeArchived') === 'true';
+const { sort, dir } = parseSort(url.searchParams.get('sort'), url.searchParams.get('dir'));
 
-const today = new Date().toISOString().split('T')[0];
+const today = todayInTz();
+const salaryMin = salaryMinStr ? parseInt(salaryMinStr, 10) : undefined;
 
-const jobs = await listJobs({
-  status: status || undefined,
-  remoteType: remoteType || undefined,
-  salaryMin: salaryMinStr ? parseInt(salaryMinStr, 10) : undefined,
-  search: search || undefined,
-  hasOverdueAction,
-  includeArchived,
-});
+const [rows, skillNames] = await Promise.all([
+  listJobs({
+    status: status || undefined,
+    remoteType: remoteType || undefined,
+    salaryMin: Number.isFinite(salaryMin) ? salaryMin : undefined,
+    search: search || undefined,
+    skill: skill || undefined,
+    hasOverdueAction,
+    includeArchived,
+  }),
+  listSkillNames(),
+]);
+
+const jobs = sortJobs(
+  rows.map((j) => ({ ...j, matchScore: computeMatchScore(j.skills) })),
+  sort,
+  dir,
+  config.pipeline.stages.map((s) => s.id)
+);
 
 const stagesMap = new Map(config.pipeline.stages.map((s) => [s.id, s.label]));
+
+/** Link for a sortable column header: toggles direction if already sorted by it, keeps other filters. */
+function sortHref(key: SortKey) {
+  const params = new URLSearchParams(url.searchParams);
+  const nextDir = sort === key ? (dir === 'asc' ? 'desc' : 'asc') : DEFAULT_DIR[key];
+  params.set('sort', key);
+  params.set('dir', nextDir);
+  return `/jobs?${params.toString()}`;
+}
+
+function ariaSort(key: SortKey) {
+  if (sort !== key) return undefined;
+  return dir === 'asc' ? 'ascending' : 'descending';
+}
+
+const columns: { key: SortKey; label: string }[] = [
+  { key: 'title', label: 'Title & Company' },
+  { key: 'status', label: 'Stage' },
+  { key: 'salary', label: 'Salary' },
+  { key: 'match', label: 'Match' },
+  { key: 'next', label: 'Next Action' },
+  { key: 'updated', label: 'Updated' },
+];
 ---
 
 <Layout title="Jobs List">
@@ -74,6 +114,18 @@ const stagesMap = new Map(config.pipeline.stages.map((s) => [s.id, s.label]));
         </div>
 
         <div class="filter-field">
+          <label for="skill">Skill</label>
+          <select id="skill" name="skill" class="select">
+            <option value="">Any Skill</option>
+            {skillNames.map((name) => (
+              <option value={name} selected={skill.toLowerCase() === name.toLowerCase()}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div class="filter-field">
           <label for="salaryMin">Min Salary ({config.app.currency})</label>
           <input
             type="number"
@@ -98,6 +150,8 @@ const stagesMap = new Map(config.pipeline.stages.map((s) => [s.id, s.label]));
         </div>
       </div>
 
+      <input type="hidden" name="sort" value={sort} />
+      <input type="hidden" name="dir" value={dir} />
       <div class="filter-actions">
         <button type="submit" class="btn btn-primary btn-sm">Filter</button>
         <a href="/jobs" class="btn btn-sm">Clear</a>
@@ -115,28 +169,27 @@ const stagesMap = new Map(config.pipeline.stages.map((s) => [s.id, s.label]));
         <table class="jobs-table">
           <thead>
             <tr>
-              <th>Title &amp; Company</th>
-              <th>Stage</th>
-              <th>Workplace</th>
-              <th>Salary</th>
-              <th>Match</th>
-              <th>Next Action</th>
-              <th class="text-right">Actions</th>
+              {columns.map((col, i) => (
+                <>
+                  <th scope="col" aria-sort={ariaSort(col.key)}>
+                    <a href={sortHref(col.key)} class={`sort-link ${sort === col.key ? 'is-sorted' : ''}`}>
+                      {col.label}
+                      <span class="sort-indicator" aria-hidden="true">
+                        {sort === col.key ? (dir === 'asc' ? '▲' : '▼') : ''}
+                      </span>
+                    </a>
+                  </th>
+                  {i === 1 && <th scope="col">Workplace</th>}
+                </>
+              ))}
+              <th scope="col" class="text-right">Actions</th>
             </tr>
           </thead>
           <tbody>
             {jobs.map((job) => {
-              const matchScore = computeMatchScore(job.skills);
+              const matchScore = job.matchScore;
               const isOverdue = job.nextActionDate && job.nextActionDate < today;
-
-              let salaryFmt = '—';
-              if (job.salaryMin && job.salaryMax) {
-                salaryFmt = `${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}`;
-              } else if (job.salaryMin) {
-                salaryFmt = `${job.salaryMin.toLocaleString()}+`;
-              } else if (job.salaryMax) {
-                salaryFmt = `Up to ${job.salaryMax.toLocaleString()}`;
-              }
+              const salaryFmt = formatSalary(job, { withCurrency: false }) || '—';
 
               return (
                 <tr class={job.archivedAt ? 'archived-row' : ''}>
@@ -155,7 +208,7 @@ const stagesMap = new Map(config.pipeline.stages.map((s) => [s.id, s.label]));
                     </span>
                   </td>
                   <td>
-                    <span class="badge remote-badge">{job.remoteType}</span>
+                    <span class="badge remote-badge">{REMOTE_LABELS[job.remoteType] ?? job.remoteType}</span>
                   </td>
                   <td class="salary-cell">
                     {salaryFmt}
@@ -170,12 +223,17 @@ const stagesMap = new Map(config.pipeline.stages.map((s) => [s.id, s.label]));
                       <div class={`next-action-cell ${isOverdue ? 'overdue' : ''}`}>
                         <span class="action-text">{job.nextAction}</span>
                         {job.nextActionDate && (
-                          <span class="action-date">{job.nextActionDate}</span>
+                          <time class="action-date" datetime={job.nextActionDate}>
+                            {isOverdue ? 'Overdue · ' : ''}{formatDate(job.nextActionDate)}
+                          </time>
                         )}
                       </div>
                     ) : (
                       <span class="text-muted">—</span>
                     )}
+                  </td>
+                  <td class="updated-cell">
+                    <time datetime={new Date(job.updatedAt).toISOString()}>{formatDate(job.updatedAt)}</time>
                   </td>
                   <td class="text-right actions-cell">
                     <a href={`/jobs/${job.id}`} class="btn btn-sm">View</a>
@@ -219,7 +277,7 @@ const stagesMap = new Map(config.pipeline.stages.map((s) => [s.id, s.label]));
   }
   .filter-inputs {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr auto;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
     gap: 1rem;
     align-items: flex-end;
   }
@@ -335,6 +393,31 @@ const stagesMap = new Map(config.pipeline.stages.map((s) => [s.id, s.label]));
   .action-date {
     font-size: 0.75rem;
     color: var(--text-muted);
+  }
+  .sort-link {
+    color: inherit;
+    display: inline-flex;
+    gap: 0.25rem;
+    align-items: center;
+    white-space: nowrap;
+  }
+  .sort-link:hover,
+  .sort-link.is-sorted {
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+  .sort-indicator {
+    font-size: 0.6rem;
+    min-width: 0.6rem;
+  }
+  .salary-cell,
+  .updated-cell {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .updated-cell {
+    color: var(--text-muted);
+    font-size: 0.8rem;
   }
   .text-right {
     text-align: right;

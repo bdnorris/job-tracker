@@ -1,4 +1,11 @@
 import { z } from 'zod';
+import config from '../../config';
+
+const STAGE_IDS = config.pipeline.stages.map((s) => s.id);
+export const StatusSchema = z
+  .string()
+  .min(1)
+  .refine((v) => STAGE_IDS.includes(v), { message: `Status must be one of: ${STAGE_IDS.join(', ')}` });
 
 export const RemoteTypeSchema = z.enum(['remote', 'hybrid', 'onsite', 'unknown']);
 export const SalaryPeriodSchema = z.enum(['year', 'month', 'hour']);
@@ -15,7 +22,7 @@ export const CreateJobSchema = z.object({
   url: z.string().url('Invalid URL format').optional().nullable().or(z.literal('')),
   descriptionHtml: z.string().optional().nullable(),
   descriptionText: z.string().optional().nullable(),
-  status: z.string().min(1).default('saved'),
+  status: StatusSchema.default(config.pipeline.defaultStage),
   priority: z.coerce.number().int().min(0).max(3).default(1),
   nextAction: z.string().optional().nullable(),
   nextActionDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD').optional().nullable().or(z.literal('')),
@@ -26,8 +33,14 @@ export const CreateJobSchema = z.object({
 
 export const UpdateJobSchema = CreateJobSchema.partial().extend({
   archivedAt: z.string().datetime().optional().nullable(),
-  boardOrder: z.number().optional(),
+  boardOrder: z.number().finite().optional(),
+});
+
+export const ReorderJobSchema = z.object({
+  status: StatusSchema,
+  boardOrder: z.number().finite(),
 });
 
 export type CreateJobInput = z.infer<typeof CreateJobSchema>;
 export type UpdateJobInput = z.infer<typeof UpdateJobSchema>;
+export type ReorderJobInput = z.infer<typeof ReorderJobSchema>;

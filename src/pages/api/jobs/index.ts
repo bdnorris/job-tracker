@@ -1,6 +1,9 @@
 import type { APIRoute } from 'astro';
 import { createJob, listJobs } from '../../../db/queries/jobs';
 import { CreateJobSchema } from '../../../lib/validation/job';
+import { computeMatchScore } from '../../../lib/skills/match';
+import { parseSort, sortJobs } from '../../../lib/jobs/sort';
+import config from '../../../config';
 
 export const GET: APIRoute = async ({ url }) => {
   try {
@@ -9,17 +12,26 @@ export const GET: APIRoute = async ({ url }) => {
     const salaryMinStr = url.searchParams.get('salaryMin');
     const salaryMin = salaryMinStr ? parseInt(salaryMinStr, 10) : undefined;
     const search = url.searchParams.get('search') || undefined;
+    const skill = url.searchParams.get('skill') || undefined;
+    const { sort, dir } = parseSort(url.searchParams.get('sort'), url.searchParams.get('dir'));
     const hasOverdueAction = url.searchParams.get('hasOverdueAction') === 'true';
     const includeArchived = url.searchParams.get('includeArchived') === 'true';
 
-    const jobs = await listJobs({
+    const rows = await listJobs({
       status,
       remoteType,
       salaryMin,
       search,
+      skill,
       hasOverdueAction,
       includeArchived,
     });
+    const jobs = sortJobs(
+      rows.map((j) => ({ ...j, matchScore: computeMatchScore(j.skills) })),
+      sort,
+      dir,
+      config.pipeline.stages.map((s) => s.id)
+    );
 
     return new Response(JSON.stringify({ jobs }), {
       status: 200,

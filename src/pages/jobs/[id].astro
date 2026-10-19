@@ -2,6 +2,9 @@
 import Layout from '../../layouts/Layout.astro';
 import config from '../../config';
 import { getJobById } from '../../db/queries/jobs';
+import Timeline from '../../components/Timeline.astro';
+import { formatSalary, REMOTE_LABELS } from '../../lib/format';
+import { formatDate, todayInTz } from '../../lib/dates';
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect('/jobs');
@@ -12,18 +15,11 @@ if (!job) return Astro.redirect('/jobs');
 const warning = Astro.url.searchParams.get('warning');
 const isArchived = Boolean(job.archivedAt);
 
-// Format salary display
-let salaryText = '';
-if (job.salaryMin && job.salaryMax) {
-  salaryText = `${job.salaryCurrency} ${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}`;
-} else if (job.salaryMin) {
-  salaryText = `${job.salaryCurrency} ${job.salaryMin.toLocaleString()}+`;
-} else if (job.salaryMax) {
-  salaryText = `Up to ${job.salaryCurrency} ${job.salaryMax.toLocaleString()}`;
-}
-if (salaryText && job.salaryPeriod) {
-  salaryText += ` / ${job.salaryPeriod}`;
-}
+const eventError = Astro.url.searchParams.get('eventError');
+const salaryText = formatSalary(job);
+const today = todayInTz();
+const nextOverdue = !!job.nextActionDate && job.nextActionDate < today;
+const PRIORITY_LABELS = ['None', 'Normal', 'High', 'Top'];
 
 const currentStage = config.pipeline.stages.find((s) => s.id === job.status);
 const stageLabel = currentStage ? currentStage.label : job.status;
@@ -72,15 +68,32 @@ const stageLabel = currentStage ? currentStage.label : job.status;
           <div class="job-subtitle">
             <span class="company-name">{job.company}</span>
             {job.location && <span class="meta-item">📍 {job.location}</span>}
-            <span class="meta-item badge">{job.remoteType}</span>
-            <span class="meta-item badge status-badge">{stageLabel}</span>
-            {job.priority > 1 && (
-              <span class="meta-item badge priority-badge">Priority {job.priority}</span>
-            )}
+            <span class="meta-item badge">{REMOTE_LABELS[job.remoteType] ?? job.remoteType}</span>
           </div>
         </div>
 
         {salaryText && <div class="salary-display">{salaryText}</div>}
+      </div>
+
+      <div class="header-controls no-print">
+        <div class="control">
+          <label for="job-status">Status</label>
+          <select id="job-status" class="select" data-field="status">
+            {!currentStage && <option value={job.status} selected>{stageLabel}</option>}
+            {config.pipeline.stages.map((s) => (
+              <option value={s.id} selected={s.id === job.status}>{s.label}</option>
+            ))}
+          </select>
+        </div>
+        <div class="control">
+          <label for="job-priority">Priority</label>
+          <select id="job-priority" class="select" data-field="priority">
+            {PRIORITY_LABELS.map((label, i) => (
+              <option value={i} selected={i === job.priority}>{label}</option>
+            ))}
+          </select>
+        </div>
+        <p class="control-status" role="status" aria-live="polite"></p>
       </div>
 
       <div class="header-meta-row">
@@ -91,13 +104,17 @@ const stageLabel = currentStage ? currentStage.label : job.status;
         )}
         {job.appliedAt && (
           <span class="applied-date">
-            Applied on: {new Date(job.appliedAt).toLocaleDateString()}
+            Applied {formatDate(job.appliedAt)}
           </span>
         )}
         {job.nextAction && (
-          <div class="next-action-pill">
+          <div class={`next-action-pill ${nextOverdue ? 'overdue' : ''}`}>
             <strong>Next:</strong> {job.nextAction}
-            {job.nextActionDate && <span>(due {job.nextActionDate})</span>}
+            {job.nextActionDate && (
+              <span>
+                ({nextOverdue ? 'overdue, ' : ''}due {formatDate(job.nextActionDate)})
+              </span>
+            )}
           </div>
         )}
       </div>
@@ -132,27 +149,7 @@ const stageLabel = currentStage ? currentStage.label : job.status;
           )}
         </div>
 
-        <!-- Timeline Events -->
-        <div class="card sidebar-card">
-          <h3>Timeline</h3>
-          {job.events && job.events.length > 0 ? (
-            <div class="timeline">
-              {job.events.map((evt) => (
-                <div class="timeline-event">
-                  <div class="event-header">
-                    <span class="event-title">{evt.title}</span>
-                    <time class="event-time">
-                      {new Date(evt.occurredAt).toLocaleDateString()}
-                    </time>
-                  </div>
-                  {evt.body && <p class="event-body">{evt.body}</p>}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p class="empty-state">No events logged yet.</p>
-          )}
-        </div>
+        <Timeline jobId={job.id} events={job.events} error={eventError} />
       </aside>
     </div>
   </div>
@@ -174,6 +171,33 @@ const stageLabel = currentStage ? currentStage.label : job.status;
       } catch (err) {
         alert('An error occurred.');
       }
+    });
+
+    // Status and priority selects save immediately; a status change logs a timeline event, so reload.
+    document.querySelectorAll('[data-field]').forEach((select) => {
+      select.addEventListener('change', async () => {
+        const field = select.dataset.field;
+        const value = field === 'priority' ? Number(select.value) : select.value;
+        const statusEl = document.querySelector('.control-status');
+        select.disabled = true;
+        try {
+          const res = await fetch(`/api/jobs/${jobId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ [field]: value }),
+          });
+          if (!res.ok) throw new Error();
+          if (field === 'status') {
+            window.location.reload();
+            return;
+          }
+          if (statusEl) statusEl.textContent = 'Saved';
+        } catch {
+          if (statusEl) statusEl.textContent = 'Could not save. Try again.';
+        } finally {
+          select.disabled = false;
+        }
+      });
     });
 
     // Handle Archive
@@ -281,6 +305,32 @@ const stageLabel = currentStage ? currentStage.label : job.status;
     color: var(--primary);
     font-weight: 500;
   }
+  .header-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+  }
+  .control {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 10rem;
+  }
+  .control label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .control-status {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    align-self: center;
+  }
+  .next-action-pill.overdue {
+    background-color: var(--danger-subtle);
+    color: var(--danger);
+  }
   .next-action-pill {
     background-color: var(--primary-subtle);
     color: var(--primary);
@@ -322,34 +372,6 @@ const stageLabel = currentStage ? currentStage.label : job.status;
   .skill-badge {
     background-color: var(--primary-subtle);
     color: var(--primary);
-  }
-  .timeline {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-  .timeline-event {
-    border-left: 2px solid var(--border-subtle);
-    padding-left: 0.75rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-  .event-header {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.875rem;
-  }
-  .event-title {
-    font-weight: 600;
-  }
-  .event-time {
-    color: var(--text-muted);
-    font-size: 0.75rem;
-  }
-  .event-body {
-    font-size: 0.825rem;
-    color: var(--text-secondary);
   }
   .empty-state {
     color: var(--text-muted);
