@@ -1,0 +1,115 @@
+---
+import '../styles/tokens.css';
+import '../styles/base.css';
+import '../styles/print.css';
+import config from '../config';
+
+interface Props {
+  title?: string;
+  showNav?: boolean;
+}
+
+const { title, showNav = true } = Astro.props;
+const pageTitle = title ? `${title} · ${config.app.name}` : config.app.name;
+const currentPath = Astro.url.pathname;
+const printClass = config.print.showUrls ? 'show-urls' : '';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Single-user job tracking board" />
+    <title>{pageTitle}</title>
+  </head>
+  <body class={printClass}>
+    <a href="#main-content" class="sr-only">Skip to content</a>
+
+    {showNav && (
+      <header class="app-header no-print">
+        <div class="header-inner">
+          <div class="brand">
+            <a href="/" class="brand-link">
+              <span class="brand-name">{config.app.name}</span>
+            </a>
+          </div>
+
+          <nav class="main-nav" aria-label="Main Navigation">
+            <a href="/" class={currentPath === '/' ? 'active' : ''}>Board</a>
+            <a href="/jobs" class={currentPath === '/jobs' ? 'active' : ''}>List</a>
+            <a href="/jobs/new" class={currentPath === '/jobs/new' ? 'active' : ''}>+ Add Job</a>
+            <a href="/profile" class={currentPath.startsWith('/profile') ? 'active' : ''}>App Kit</a>
+            <a href="/settings" class={currentPath.startsWith('/settings') ? 'active' : ''}>Settings</a>
+          </nav>
+
+          <div class="header-actions">
+            <form action="/api/auth/logout" method="POST">
+              <button type="submit" class="btn btn-sm">Sign Out</button>
+            </form>
+          </div>
+        </div>
+      </header>
+    )}
+
+    <main id="main-content" class="main-container">
+      <slot />
+    </main>
+
+    <style>
+      .app-header {
+        background-color: var(--bg-surface);
+        border-bottom: 1px solid var(--border-subtle);
+        height: var(--header-height);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+      }
+      .header-inner {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 0 1.5rem;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1.5rem;
+      }
+      .brand-link {
+        font-weight: 700;
+        font-size: 1.125rem;
+        color: var(--text-primary);
+        text-decoration: none;
+      }
+      .main-nav {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      .main-nav a {
+        padding: 0.4rem 0.8rem;
+        border-radius: var(--radius-md);
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: background-color 0.15s ease, color 0.15s ease;
+      }
+      .main-nav a:hover {
+        background-color: var(--bg-subtle);
+        color: var(--text-primary);
+      }
+      .main-nav a.active {
+        background-color: var(--primary-subtle);
+        color: var(--primary);
+      }
+      .main-container {
+        flex: 1;
+        max-width: var(--max-width);
+        width: 100%;
+        margin: 0 auto;
+        padding: 1.5rem;
+      }
+    </style>
+  </body>
+</html>

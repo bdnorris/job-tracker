@@ -1,0 +1,358 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import config from '../../config';
+import { listJobs } from '../../db/queries/jobs';
+import { computeMatchScore } from '../../lib/skills/match';
+
+const url = Astro.url;
+const status = url.searchParams.get('status') || '';
+const remoteType = url.searchParams.get('remoteType') || '';
+const salaryMinStr = url.searchParams.get('salaryMin') || '';
+const search = url.searchParams.get('search') || '';
+const hasOverdueAction = url.searchParams.get('hasOverdueAction') === 'true';
+const includeArchived = url.searchParams.get('includeArchived') === 'true';
+
+const today = new Date().toISOString().split('T')[0];
+
+const jobs = await listJobs({
+  status: status || undefined,
+  remoteType: remoteType || undefined,
+  salaryMin: salaryMinStr ? parseInt(salaryMinStr, 10) : undefined,
+  search: search || undefined,
+  hasOverdueAction,
+  includeArchived,
+});
+
+const stagesMap = new Map(config.pipeline.stages.map((s) => [s.id, s.label]));
+---
+
+<Layout title="Jobs List">
+  <div class="jobs-page">
+    <div class="header-row">
+      <div>
+        <h1>All Jobs</h1>
+        <p class="subtitle">Showing {jobs.length} job{jobs.length === 1 ? '' : 's'}</p>
+      </div>
+      <a href="/jobs/new" class="btn btn-primary">+ Add Job</a>
+    </div>
+
+    <!-- Filters Bar -->
+    <form method="GET" action="/jobs" class="card filter-bar">
+      <div class="filter-inputs">
+        <div class="filter-field">
+          <label for="search">Search</label>
+          <input
+            type="text"
+            id="search"
+            name="search"
+            class="input"
+            placeholder="Title, company, or keywords"
+            value={search}
+          />
+        </div>
+
+        <div class="filter-field">
+          <label for="status">Stage</label>
+          <select id="status" name="status" class="select">
+            <option value="">All Stages</option>
+            {config.pipeline.stages.map((stage) => (
+              <option value={stage.id} selected={status === stage.id}>
+                {stage.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label for="remoteType">Workplace</label>
+          <select id="remoteType" name="remoteType" class="select">
+            <option value="">All Workplace Types</option>
+            <option value="remote" selected={remoteType === 'remote'}>Remote</option>
+            <option value="hybrid" selected={remoteType === 'hybrid'}>Hybrid</option>
+            <option value="onsite" selected={remoteType === 'onsite'}>Onsite</option>
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label for="salaryMin">Min Salary ({config.app.currency})</label>
+          <input
+            type="number"
+            id="salaryMin"
+            name="salaryMin"
+            class="input"
+            placeholder="e.g. 100000"
+            value={salaryMinStr}
+          />
+        </div>
+
+        <div class="filter-checkboxes">
+          <label class="checkbox-label">
+            <input type="checkbox" name="hasOverdueAction" value="true" checked={hasOverdueAction} />
+            <span>Overdue Next Action</span>
+          </label>
+
+          <label class="checkbox-label">
+            <input type="checkbox" name="includeArchived" value="true" checked={includeArchived} />
+            <span>Include Archived</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button type="submit" class="btn btn-primary btn-sm">Filter</button>
+        <a href="/jobs" class="btn btn-sm">Clear</a>
+      </div>
+    </form>
+
+    <!-- Table -->
+    {jobs.length === 0 ? (
+      <div class="card empty-container">
+        <p>No jobs found matching your filters.</p>
+        <a href="/jobs/new" class="btn btn-primary btn-sm">+ Add Your First Job</a>
+      </div>
+    ) : (
+      <div class="card table-container">
+        <table class="jobs-table">
+          <thead>
+            <tr>
+              <th>Title &amp; Company</th>
+              <th>Stage</th>
+              <th>Workplace</th>
+              <th>Salary</th>
+              <th>Match</th>
+              <th>Next Action</th>
+              <th class="text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {jobs.map((job) => {
+              const matchScore = computeMatchScore(job.skills);
+              const isOverdue = job.nextActionDate && job.nextActionDate < today;
+
+              let salaryFmt = '—';
+              if (job.salaryMin && job.salaryMax) {
+                salaryFmt = `${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}`;
+              } else if (job.salaryMin) {
+                salaryFmt = `${job.salaryMin.toLocaleString()}+`;
+              } else if (job.salaryMax) {
+                salaryFmt = `Up to ${job.salaryMax.toLocaleString()}`;
+              }
+
+              return (
+                <tr class={job.archivedAt ? 'archived-row' : ''}>
+                  <td>
+                    <div class="job-cell-title">
+                      <a href={`/jobs/${job.id}`} class="title-link">
+                        {job.title}
+                      </a>
+                      <span class="company-sub">{job.company}</span>
+                      {job.location && <span class="location-sub">📍 {job.location}</span>}
+                    </div>
+                  </td>
+                  <td>
+                    <span class="badge stage-badge">
+                      {stagesMap.get(job.status) || job.status}
+                    </span>
+                  </td>
+                  <td>
+                    <span class="badge remote-badge">{job.remoteType}</span>
+                  </td>
+                  <td class="salary-cell">
+                    {salaryFmt}
+                  </td>
+                  <td>
+                    <span class={`badge match-badge ${matchScore >= 50 ? 'match-high' : ''}`}>
+                      {matchScore}%
+                    </span>
+                  </td>
+                  <td>
+                    {job.nextAction ? (
+                      <div class={`next-action-cell ${isOverdue ? 'overdue' : ''}`}>
+                        <span class="action-text">{job.nextAction}</span>
+                        {job.nextActionDate && (
+                          <span class="action-date">{job.nextActionDate}</span>
+                        )}
+                      </div>
+                    ) : (
+                      <span class="text-muted">—</span>
+                    )}
+                  </td>
+                  <td class="text-right actions-cell">
+                    <a href={`/jobs/${job.id}`} class="btn btn-sm">View</a>
+                    <a href={`/jobs/${job.id}/edit`} class="btn btn-sm">Edit</a>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    )}
+  </div>
+</Layout>
+
+<style>
+  .jobs-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header-row h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+  .filter-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+  .filter-inputs {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr auto;
+    gap: 1rem;
+    align-items: flex-end;
+  }
+  .filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .filter-field label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+  }
+  .filter-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+  }
+  .filter-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+  .empty-container {
+    text-align: center;
+    padding: 3rem 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: var(--text-muted);
+  }
+  .table-container {
+    padding: 0;
+    overflow-x: auto;
+  }
+  .jobs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    text-align: left;
+  }
+  .jobs-table th {
+    padding: 0.75rem 1rem;
+    background-color: var(--bg-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .jobs-table td {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: middle;
+  }
+  .jobs-table tr:last-child td {
+    border-bottom: none;
+  }
+  .jobs-table tr:hover td {
+    background-color: var(--bg-subtle);
+  }
+  .archived-row td {
+    opacity: 0.6;
+  }
+  .job-cell-title {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .title-link {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .company-sub {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+  }
+  .location-sub {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .stage-badge {
+    background-color: var(--primary-subtle);
+    color: var(--primary);
+  }
+  .match-badge {
+    background-color: var(--bg-subtle);
+    color: var(--text-secondary);
+  }
+  .match-high {
+    background-color: var(--success-subtle);
+    color: var(--success);
+  }
+  .next-action-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+  .next-action-cell.overdue .action-text,
+  .next-action-cell.overdue .action-date {
+    color: var(--danger);
+    font-weight: 600;
+  }
+  .action-date {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .text-right {
+    text-align: right;
+  }
+  .text-muted {
+    color: var(--text-muted);
+  }
+  .actions-cell {
+    white-space: nowrap;
+  }
+  @media (max-width: 1024px) {
+    .filter-inputs {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  @media (max-width: 640px) {
+    .filter-inputs {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

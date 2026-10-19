@@ -1,0 +1,251 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import config from '../../../config';
+import { getJobById } from '../../../db/queries/jobs';
+
+const { id } = Astro.params;
+if (!id) return Astro.redirect('/jobs');
+
+const job = await getJobById(id);
+if (!job) return Astro.redirect('/jobs');
+
+const error = Astro.url.searchParams.get('error');
+const skillsString = (job.skills || []).map((s) => s.name).join(', ');
+---
+
+<Layout title={`Edit ${job.title}`}>
+  <div class="page-container">
+    <div class="page-header">
+      <a href={`/jobs/${job.id}`} class="back-link">← Cancel and return</a>
+      <h1>Edit Job Posting</h1>
+    </div>
+
+    {error && (
+      <div class="error-banner" role="alert">
+        {error}
+      </div>
+    )}
+
+    <form id="edit-form" class="card job-form">
+      <div class="form-grid">
+        <!-- Title -->
+        <div class="form-group col-span-2">
+          <label for="title">Job Title <span class="required">*</span></label>
+          <input type="text" id="title" name="title" class="input" required value={job.title} />
+        </div>
+
+        <!-- Company -->
+        <div class="form-group col-span-2">
+          <label for="company">Company <span class="required">*</span></label>
+          <input type="text" id="company" name="company" class="input" required value={job.company} />
+        </div>
+
+        <!-- Location -->
+        <div class="form-group">
+          <label for="location">Location</label>
+          <input type="text" id="location" name="location" class="input" value={job.location || ''} />
+        </div>
+
+        <!-- Remote Type -->
+        <div class="form-group">
+          <label for="remoteType">Workplace Type</label>
+          <select id="remoteType" name="remoteType" class="select">
+            <option value="unknown" selected={job.remoteType === 'unknown'}>Unknown</option>
+            <option value="remote" selected={job.remoteType === 'remote'}>Remote</option>
+            <option value="hybrid" selected={job.remoteType === 'hybrid'}>Hybrid</option>
+            <option value="onsite" selected={job.remoteType === 'onsite'}>Onsite</option>
+          </select>
+        </div>
+
+        <!-- Salary Min / Max / Period -->
+        <div class="form-group">
+          <label for="salaryMin">Salary Min ({job.salaryCurrency})</label>
+          <input type="number" id="salaryMin" name="salaryMin" class="input" value={job.salaryMin || ''} min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label for="salaryMax">Salary Max ({job.salaryCurrency})</label>
+          <input type="number" id="salaryMax" name="salaryMax" class="input" value={job.salaryMax || ''} min="0" step="1" />
+        </div>
+
+        <div class="form-group">
+          <label for="salaryPeriod">Salary Period</label>
+          <select id="salaryPeriod" name="salaryPeriod" class="select">
+            <option value="year" selected={job.salaryPeriod === 'year'}>Yearly</option>
+            <option value="month" selected={job.salaryPeriod === 'month'}>Monthly</option>
+            <option value="hour" selected={job.salaryPeriod === 'hour'}>Hourly</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="status">Stage</label>
+          <select id="status" name="status" class="select">
+            {config.pipeline.stages.map((stage) => (
+              <option value={stage.id} selected={stage.id === job.status}>
+                {stage.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <!-- Priority -->
+        <div class="form-group">
+          <label for="priority">Priority</label>
+          <select id="priority" name="priority" class="select">
+            <option value="0" selected={job.priority === 0}>0 - Low</option>
+            <option value="1" selected={job.priority === 1}>1 - Normal</option>
+            <option value="2" selected={job.priority === 2}>2 - High</option>
+            <option value="3" selected={job.priority === 3}>3 - Urgent</option>
+          </select>
+        </div>
+
+        <!-- Next Action -->
+        <div class="form-group">
+          <label for="nextAction">Next Action</label>
+          <input type="text" id="nextAction" name="nextAction" class="input" value={job.nextAction || ''} />
+        </div>
+
+        <!-- Next Action Date -->
+        <div class="form-group">
+          <label for="nextActionDate">Next Action Date</label>
+          <input type="date" id="nextActionDate" name="nextActionDate" class="input" value={job.nextActionDate || ''} />
+        </div>
+
+        <!-- Posting URL -->
+        <div class="form-group col-span-2">
+          <label for="url">Job Posting URL</label>
+          <input type="url" id="url" name="url" class="input" value={job.url || ''} />
+        </div>
+
+        <!-- Skills -->
+        <div class="form-group col-span-2">
+          <label for="skills">Skills (comma separated)</label>
+          <input type="text" id="skills" name="skills" class="input" value={skillsString} />
+        </div>
+
+        <!-- Description Text -->
+        <div class="form-group col-span-2">
+          <label for="descriptionText">Job Description</label>
+          <textarea id="descriptionText" name="descriptionText" class="textarea" rows="10">{job.descriptionText || ''}</textarea>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <a href={`/jobs/${job.id}`} class="btn">Cancel</a>
+        <button type="submit" class="btn btn-primary" id="save-btn">Save Changes</button>
+      </div>
+    </form>
+  </div>
+
+  <script define:vars={{ jobId: job.id }}>
+    const form = document.getElementById('edit-form');
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const saveBtn = document.getElementById('save-btn');
+      if (saveBtn) saveBtn.textContent = 'Saving...';
+
+      const formData = new FormData(form);
+      const skillsVal = formData.get('skills');
+      const payload = {
+        title: formData.get('title'),
+        company: formData.get('company'),
+        location: formData.get('location') || null,
+        remoteType: formData.get('remoteType'),
+        salaryMin: formData.get('salaryMin') ? Number(formData.get('salaryMin')) : null,
+        salaryMax: formData.get('salaryMax') ? Number(formData.get('salaryMax')) : null,
+        salaryPeriod: formData.get('salaryPeriod') || null,
+        status: formData.get('status'),
+        priority: Number(formData.get('priority')),
+        nextAction: formData.get('nextAction') || null,
+        nextActionDate: formData.get('nextActionDate') || null,
+        url: formData.get('url') || null,
+        descriptionText: formData.get('descriptionText') || null,
+        skills: skillsVal ? skillsVal.split(',').map((s) => s.trim()).filter(Boolean) : [],
+      };
+
+      try {
+        const res = await fetch(`/api/jobs/${jobId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (res.ok) {
+          window.location.href = `/jobs/${jobId}`;
+        } else {
+          const json = await res.json();
+          alert(json?.error?.message || 'Failed to update job');
+          if (saveBtn) saveBtn.textContent = 'Save Changes';
+        }
+      } catch (err) {
+        alert('An error occurred.');
+        if (saveBtn) saveBtn.textContent = 'Save Changes';
+      }
+    });
+  </script>
+</Layout>
+
+<style>
+  .page-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+  .page-header {
+    margin-bottom: 1.5rem;
+  }
+  .back-link {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    display: inline-block;
+    margin-bottom: 0.5rem;
+  }
+  .page-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+  .error-banner {
+    background-color: var(--danger-subtle);
+    border: 1px solid var(--danger-border);
+    color: var(--danger);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 1.5rem;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+  .col-span-2 {
+    grid-column: span 2;
+  }
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .form-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+  }
+  .required {
+    color: var(--danger);
+  }
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-subtle);
+  }
+  @media (max-width: 640px) {
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+    .col-span-2 {
+      grid-column: span 1;
+    }
+  }
+</style>

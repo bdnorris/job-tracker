@@ -1,0 +1,54 @@
+@media print {
+  *, *::before, *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  body {
+    background: #fff !important;
+    font-size: 11pt;
+    line-height: 1.4;
+    padding: 0;
+    margin: 0;
+  }
+
+  /* Keep highlight colors exact */
+  mark.hl {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color: #000 !important;
+  }
+  mark.hl-requirement { background-color: var(--hl-requirement) !important; }
+  mark.hl-nice { background-color: var(--hl-nice) !important; }
+  mark.hl-redflag { background-color: var(--hl-redflag) !important; }
+  mark.hl-perk { background-color: var(--hl-perk) !important; }
+  mark.hl-keyword { background-color: var(--hl-keyword) !important; }
+
+  /* Hide app chrome, navigation, buttons, forms, popovers */
+  header, nav, footer, .no-print, .btn, button, form, .popover, .drag-handle, .sidebar {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  /* Show URLs for external links when enabled */
+  .show-urls a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 85%;
+    color: #555 !important;
+  }
+
+  .page-break-avoid {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  h1, h2, h3, h4 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+}

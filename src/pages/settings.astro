@@ -1,0 +1,201 @@
+---
+import Layout from '../layouts/Layout.astro';
+import config from '../config';
+
+const hasAiKey = Boolean(process.env.ANTHROPIC_API_KEY);
+---
+
+<Layout title="Settings">
+  <div class="settings-page">
+    <div class="header-row">
+      <h1>Settings &amp; Configuration</h1>
+      <p class="subtitle">Read-only view of <code>tracker.config.ts</code> and active runtime state</p>
+    </div>
+
+    <div class="settings-grid">
+      <!-- General App Config -->
+      <section class="card settings-card">
+        <h2>General Application</h2>
+        <dl class="config-list">
+          <dt>App Name</dt>
+          <dd>{config.app.name}</dd>
+          <dt>Timezone</dt>
+          <dd>{config.app.timezone}</dd>
+          <dt>Currency</dt>
+          <dd>{config.app.currency}</dd>
+          <dt>Show URLs on Print</dt>
+          <dd>{config.print.showUrls ? 'Enabled' : 'Disabled'}</dd>
+        </dl>
+      </section>
+
+      <!-- Scraper / Extraction Pipeline -->
+      <section class="card settings-card">
+        <h2>Extraction Pipeline</h2>
+        <dl class="config-list">
+          <dt>Extractor Order</dt>
+          <dd>
+            <div class="badges-row">
+              {config.scraper.order.map((name) => (
+                <span class="badge">{name}</span>
+              ))}
+            </div>
+          </dd>
+          <dt>Fetch Timeout</dt>
+          <dd>{config.scraper.fetchTimeoutMs} ms</dd>
+          <dt>AI Extraction Status</dt>
+          <dd>
+            {hasAiKey ? (
+              <span class="badge badge-success">Enabled (API Key set)</span>
+            ) : (
+              <span class="badge badge-muted">Disabled (No ANTHROPIC_API_KEY)</span>
+            )}
+          </dd>
+          <dt>AI Model</dt>
+          <dd><code>{config.scraper.ai.model}</code></dd>
+        </dl>
+      </section>
+
+      <!-- Pipeline Stages -->
+      <section class="card settings-card col-span-2">
+        <h2>Pipeline Stages</h2>
+        <div class="stages-table-container">
+          <table class="stages-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Label</th>
+                <th>Closed?</th>
+                <th>Default?</th>
+              </tr>
+            </thead>
+            <tbody>
+              {config.pipeline.stages.map((stage) => (
+                <tr>
+                  <td><code>{stage.id}</code></td>
+                  <td>{stage.label}</td>
+                  <td>{stage.closed ? 'Yes' : 'No'}</td>
+                  <td>{stage.id === config.pipeline.defaultStage ? '★ Default' : ''}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Highlight Categories -->
+      <section class="card settings-card col-span-2">
+        <h2>Highlight Categories</h2>
+        <div class="categories-row">
+          {config.highlights.categories.map((cat) => (
+            <div class="cat-pill" style={`background-color: ${cat.color};`}>
+              <strong>{cat.label}</strong>
+              <small>({cat.id})</small>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .settings-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .header-row h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  .col-span-2 {
+    grid-column: span 2;
+  }
+  .settings-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .settings-card h2 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 0.5rem;
+  }
+  .config-list {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+  }
+  .config-list dt {
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  .config-list dd {
+    color: var(--text-primary);
+  }
+  .badges-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .badge-success {
+    background-color: var(--success-subtle);
+    color: var(--success);
+  }
+  .badge-muted {
+    background-color: var(--bg-subtle);
+    color: var(--text-muted);
+  }
+  .stages-table-container {
+    overflow-x: auto;
+  }
+  .stages-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  .stages-table th {
+    text-align: left;
+    padding: 0.5rem 0.75rem;
+    background-color: var(--bg-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+  }
+  .stages-table td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  .categories-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  .cat-pill {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-md);
+    color: var(--hl-text-dark);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  @media (max-width: 768px) {
+    .settings-grid {
+      grid-template-columns: 1fr;
+    }
+    .col-span-2 {
+      grid-column: span 1;
+    }
+  }
+</style>

@@ -1,0 +1,104 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Setup Required" showNav={false}>
+  <div class="setup-container">
+    <div class="card setup-card">
+      <div class="setup-header">
+        <h1>Welcome to Job Tracker</h1>
+        <p class="subtitle">Initial Setup Required</p>
+      </div>
+
+      <div class="setup-body">
+        <p>Before using the application, you need to configure your password and secrets in your environment:</p>
+
+        <ol class="setup-steps">
+          <li>
+            <strong>Generate a password hash:</strong>
+            <pre><code>npm run hash-password &lt;your-password&gt;</code></pre>
+          </li>
+          <li>
+            <strong>Create or update your <code>.env</code> file:</strong>
+            <pre><code>DATABASE_URL=postgres://...
+SESSION_SECRET=&lt;generate 32+ random characters&gt;
+APP_PASSWORD_HASH=&lt;pasted hash from step 1&gt;</code></pre>
+          </li>
+          <li>
+            <strong>Apply database migrations:</strong>
+            <pre><code>npm run db:migrate</code></pre>
+          </li>
+          <li>
+            <strong>Restart the server:</strong>
+            <pre><code>npm run dev</code></pre>
+          </li>
+        </ol>
+
+        <div class="setup-footer">
+          <p class="hint">Once <code>APP_PASSWORD_HASH</code> is configured, reload this page to log in.</p>
+          <a href="/" class="btn btn-primary">Check Configuration &amp; Reload</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .setup-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh;
+  }
+  .setup-card {
+    max-width: 600px;
+    width: 100%;
+    padding: 2rem;
+  }
+  .setup-header {
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+  .setup-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+    margin-top: 0.25rem;
+  }
+  .setup-body p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+  }
+  .setup-steps {
+    margin: 1.5rem 0 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+  .setup-steps li {
+    color: var(--text-secondary);
+  }
+  pre {
+    background-color: var(--bg-subtle);
+    padding: 0.5rem 0.75rem;
+    border-radius: var(--radius-md);
+    margin-top: 0.5rem;
+    overflow-x: auto;
+    font-size: 0.85rem;
+    border: 1px solid var(--border-subtle);
+  }
+  .setup-footer {
+    margin-top: 2rem;
+    text-align: center;
+    border-top: 1px solid var(--border-subtle);
+    padding-top: 1.5rem;
+  }
+  .hint {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+</style>

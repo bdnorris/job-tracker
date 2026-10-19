@@ -1,0 +1,363 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import config from '../../config';
+import { getJobById } from '../../db/queries/jobs';
+
+const { id } = Astro.params;
+if (!id) return Astro.redirect('/jobs');
+
+const job = await getJobById(id);
+if (!job) return Astro.redirect('/jobs');
+
+const warning = Astro.url.searchParams.get('warning');
+const isArchived = Boolean(job.archivedAt);
+
+// Format salary display
+let salaryText = '';
+if (job.salaryMin && job.salaryMax) {
+  salaryText = `${job.salaryCurrency} ${job.salaryMin.toLocaleString()} - ${job.salaryMax.toLocaleString()}`;
+} else if (job.salaryMin) {
+  salaryText = `${job.salaryCurrency} ${job.salaryMin.toLocaleString()}+`;
+} else if (job.salaryMax) {
+  salaryText = `Up to ${job.salaryCurrency} ${job.salaryMax.toLocaleString()}`;
+}
+if (salaryText && job.salaryPeriod) {
+  salaryText += ` / ${job.salaryPeriod}`;
+}
+
+const currentStage = config.pipeline.stages.find((s) => s.id === job.status);
+const stageLabel = currentStage ? currentStage.label : job.status;
+---
+
+<Layout title={`${job.title} at ${job.company}`}>
+  <div class="job-detail">
+    <div class="detail-top-nav">
+      <a href="/jobs" class="back-link">← Back to jobs</a>
+      <div class="action-buttons">
+        <a href={`/jobs/${job.id}/edit`} class="btn btn-sm">Edit</a>
+        <a href={`/jobs/${job.id}/print`} class="btn btn-sm" target="_blank">Print Sheet</a>
+        <a href={`/jobs/${job.id}/prep`} class="btn btn-sm" target="_blank">Prep Sheet</a>
+
+        <form action={`/api/jobs/${job.id}`} method="POST" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this job posting?');">
+          <input type="hidden" name="_method" value="DELETE" />
+          <!-- Button triggers fetch or standard delete -->
+          <button type="button" id="delete-btn" class="btn btn-sm btn-danger">Delete</button>
+        </form>
+
+        <form action={`/api/jobs/${job.id}`} method="POST" class="inline-form">
+          <button type="button" id="archive-btn" class="btn btn-sm">
+            {isArchived ? 'Unarchive' : 'Archive'}
+          </button>
+        </form>
+      </div>
+    </div>
+
+    {warning && (
+      <div class="warning-banner" role="alert">
+        {warning}
+      </div>
+    )}
+
+    {isArchived && (
+      <div class="archived-banner">
+        This job is archived.
+      </div>
+    )}
+
+    <!-- Header Section -->
+    <header class="job-header card">
+      <div class="header-main">
+        <div>
+          <h1 class="job-title">{job.title}</h1>
+          <div class="job-subtitle">
+            <span class="company-name">{job.company}</span>
+            {job.location && <span class="meta-item">📍 {job.location}</span>}
+            <span class="meta-item badge">{job.remoteType}</span>
+            <span class="meta-item badge status-badge">{stageLabel}</span>
+            {job.priority > 1 && (
+              <span class="meta-item badge priority-badge">Priority {job.priority}</span>
+            )}
+          </div>
+        </div>
+
+        {salaryText && <div class="salary-display">{salaryText}</div>}
+      </div>
+
+      <div class="header-meta-row">
+        {job.url && (
+          <a href={job.url} target="_blank" rel="noopener noreferrer" class="posting-link">
+            Original Posting ↗
+          </a>
+        )}
+        {job.appliedAt && (
+          <span class="applied-date">
+            Applied on: {new Date(job.appliedAt).toLocaleDateString()}
+          </span>
+        )}
+        {job.nextAction && (
+          <div class="next-action-pill">
+            <strong>Next:</strong> {job.nextAction}
+            {job.nextActionDate && <span>(due {job.nextActionDate})</span>}
+          </div>
+        )}
+      </div>
+    </header>
+
+    <div class="job-grid">
+      <!-- Main Content: Description -->
+      <section class="card content-section">
+        <h2>Job Description</h2>
+        {job.descriptionHtml ? (
+          <div class="description-body" set:html={job.descriptionHtml} />
+        ) : job.descriptionText ? (
+          <div class="description-body whitespace-pre-wrap">{job.descriptionText}</div>
+        ) : (
+          <p class="empty-state">No description provided.</p>
+        )}
+      </section>
+
+      <!-- Sidebar: Skills & Timeline -->
+      <aside class="sidebar-section">
+        <!-- Skills -->
+        <div class="card sidebar-card">
+          <h3>Skills</h3>
+          {job.skills && job.skills.length > 0 ? (
+            <div class="skills-tags">
+              {job.skills.map((s) => (
+                <span class="badge skill-badge">{s.name}</span>
+              ))}
+            </div>
+          ) : (
+            <p class="empty-state">No skills attached.</p>
+          )}
+        </div>
+
+        <!-- Timeline Events -->
+        <div class="card sidebar-card">
+          <h3>Timeline</h3>
+          {job.events && job.events.length > 0 ? (
+            <div class="timeline">
+              {job.events.map((evt) => (
+                <div class="timeline-event">
+                  <div class="event-header">
+                    <span class="event-title">{evt.title}</span>
+                    <time class="event-time">
+                      {new Date(evt.occurredAt).toLocaleDateString()}
+                    </time>
+                  </div>
+                  {evt.body && <p class="event-body">{evt.body}</p>}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p class="empty-state">No events logged yet.</p>
+          )}
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script define:vars={{ jobId: job.id, isArchived }}>
+    // Handle Delete
+    document.getElementById('delete-btn')?.addEventListener('click', async () => {
+      if (!confirm('Are you sure you want to delete this job posting? This cannot be undone.')) return;
+      try {
+        const res = await fetch(`/api/jobs/${jobId}`, {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (res.ok) {
+          window.location.href = '/jobs';
+        } else {
+          alert('Failed to delete job.');
+        }
+      } catch (err) {
+        alert('An error occurred.');
+      }
+    });
+
+    // Handle Archive
+    document.getElementById('archive-btn')?.addEventListener('click', async () => {
+      try {
+        const res = await fetch(`/api/jobs/${jobId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            archivedAt: isArchived ? null : new Date().toISOString(),
+          }),
+        });
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          alert('Failed to update archive status.');
+        }
+      } catch (err) {
+        alert('An error occurred.');
+      }
+    });
+  </script>
+</Layout>
+
+<style>
+  .job-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .detail-top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .inline-form {
+    display: inline;
+  }
+  .back-link {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+  }
+  .warning-banner {
+    background-color: var(--warning-subtle);
+    border: 1px solid var(--warning);
+    color: var(--warning);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+  }
+  .archived-banner {
+    background-color: var(--bg-subtle);
+    border: 1px solid var(--border-strong);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+  }
+  .job-header {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .header-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .job-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+  }
+  .job-subtitle {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+    color: var(--text-secondary);
+  }
+  .company-name {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+  .salary-display {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--primary);
+    white-space: nowrap;
+  }
+  .header-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    align-items: center;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 0.875rem;
+  }
+  .posting-link {
+    color: var(--primary);
+    font-weight: 500;
+  }
+  .next-action-pill {
+    background-color: var(--primary-subtle);
+    color: var(--primary);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-sm);
+  }
+  .job-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1.5rem;
+  }
+  .content-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .description-body {
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+  .whitespace-pre-wrap {
+    white-space: pre-wrap;
+  }
+  .sidebar-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  .sidebar-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .skills-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .skill-badge {
+    background-color: var(--primary-subtle);
+    color: var(--primary);
+  }
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .timeline-event {
+    border-left: 2px solid var(--border-subtle);
+    padding-left: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  .event-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+  }
+  .event-title {
+    font-weight: 600;
+  }
+  .event-time {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+  .event-body {
+    font-size: 0.825rem;
+    color: var(--text-secondary);
+  }
+  .empty-state {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+  }
+  @media (max-width: 768px) {
+    .job-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
