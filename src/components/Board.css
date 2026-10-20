@@ -5,6 +5,9 @@
 }
 
 .board-columns {
+  /* Contain absolutely positioned descendants (sr-only labels) so off-screen
+     columns can't widen the page; overflow only clips its own containing block. */
+  position: relative;
   display: grid;
   grid-auto-flow: column;
   grid-auto-columns: minmax(260px, 1fr);

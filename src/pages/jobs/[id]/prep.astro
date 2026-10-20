@@ -1,0 +1,230 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import SheetHeader from '../../../components/print/SheetHeader.astro';
+import SheetToolbar from '../../../components/print/SheetToolbar.astro';
+import config from '../../../config';
+import { getJobById } from '../../../db/queries/jobs';
+import { isSkillMatched } from '../../../lib/skills/match';
+import { EVENT_TYPE_LABELS } from '../../../lib/validation/event';
+import { formatDate, formatDateTime } from '../../../lib/dates';
+import { renderMarkdown } from '../../../lib/markdown';
+import { splitTimeline } from '../../../lib/timeline';
+import { collectContacts } from '../../../lib/contacts';
+import { isUuid } from '../../../lib/api';
+import '../../../styles/sheet.css';
+
+const { id } = Astro.params;
+if (!isUuid(id)) return Astro.redirect('/jobs');
+const job = await getJobById(id);
+if (!job) return Astro.redirect('/jobs');
+
+const includeNotes = config.print.includeNotes;
+const knownCategories = new Set(config.highlights.categories.map((c) => c.id));
+const groups = [
+  ...config.highlights.categories.map((c) => ({
+    id: c.id,
+    label: c.label,
+    items: job.highlights.filter((h) => h.category === c.id),
+  })),
+  { id: '', label: 'Other', items: job.highlights.filter((h) => !knownCategories.has(h.category)) },
+].filter((g) => g.items.length > 0);
+
+const matchedSkills = job.skills.filter((s) => isSkillMatched(s.name));
+const missingSkills = job.skills.filter((s) => !isSkillMatched(s.name));
+
+const { upcoming, past } = splitTimeline(job.events);
+// Prep reads top to bottom: what's coming up, then history oldest-first.
+const timeline = [...upcoming, ...[...past].reverse()];
+const contacts = collectContacts(job.events);
+const typeLabel = (t: string) => EVENT_TYPE_LABELS[t as keyof typeof EVENT_TYPE_LABELS] ?? t;
+---
+
+<Layout title={`Prep sheet: ${job.title}`} showNav={false}>
+  <SheetToolbar jobId={job.id} other={{ href: `/jobs/${job.id}/print`, label: 'Job sheet' }} />
+  <article class="sheet">
+    <SheetHeader job={job} kind="Interview prep" />
+
+    <section aria-labelledby="hl-heading">
+      <h2 id="hl-heading">Highlights</h2>
+      {groups.length === 0 ? (
+        <p class="sheet-empty">No highlights yet.</p>
+      ) : (
+        <div class="hl-groups">
+          {groups.map((g) => (
+            <section class="hl-group page-break-avoid" aria-labelledby={`group-${g.id || 'other'}`}>
+              <h3 id={`group-${g.id || 'other'}`}>
+                {g.id && <span class={`print-swatch hl-${g.id}`} aria-hidden="true"></span>}
+                {g.label} <span class="count">({g.items.length})</span>
+              </h3>
+              <ul>
+                {g.items.map((h) => (
+                  <li>
+                    <q>{h.quote}</q>
+                    {includeNotes && h.note && <p class="hl-note">{h.note}</p>}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      )}
+    </section>
+
+    <section class="page-break-avoid" aria-labelledby="skills-heading">
+      <h2 id="skills-heading">Skills</h2>
+      {job.skills.length === 0 ? (
+        <p class="sheet-empty">No skills recorded for this job.</p>
+      ) : (
+        <div class="skills-grid">
+          <div>
+            <h3>Matched ({matchedSkills.length})</h3>
+            {matchedSkills.length > 0 ? (
+              <ul class="skill-list">{matchedSkills.map((s) => <li>{s.name}</li>)}</ul>
+            ) : (
+              <p class="sheet-empty">None</p>
+            )}
+          </div>
+          <div>
+            <h3>Missing ({missingSkills.length})</h3>
+            {missingSkills.length > 0 ? (
+              <ul class="skill-list">{missingSkills.map((s) => <li>{s.name}</li>)}</ul>
+            ) : (
+              <p class="sheet-empty">None</p>
+            )}
+          </div>
+        </div>
+      )}
+    </section>
+
+    <section aria-labelledby="contacts-heading" class="page-break-avoid">
+      <h2 id="contacts-heading">Contacts</h2>
+      {contacts.length === 0 ? (
+        <p class="sheet-empty">No contacts logged.</p>
+      ) : (
+        <ul class="contacts">
+          {contacts.map((c) => (
+            <li>
+              <strong>{c.name || c.email}</strong>
+              {c.role && <span> · {c.role}</span>}
+              {c.name && c.email && <span> · <a href={`mailto:${c.email}`}>{c.email}</a></span>}
+              <span class="muted"> · {c.lastSeen.getTime() > Date.now() ? 'next' : 'last'} contact {formatDate(c.lastSeen)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+
+    <section aria-labelledby="timeline-heading">
+      <h2 id="timeline-heading">Timeline</h2>
+      {timeline.length === 0 ? (
+        <p class="sheet-empty">No events logged.</p>
+      ) : (
+        <ol class="sheet-timeline">
+          {timeline.map((e) => (
+            <li class={`page-break-avoid ${upcoming.includes(e) ? 'is-upcoming' : ''}`}>
+              <div class="tl-head">
+                <time datetime={e.occurredAt.toISOString()}>{formatDateTime(e.occurredAt)}</time>
+                <span class="tl-type">{typeLabel(e.type)}{upcoming.includes(e) ? ' · upcoming' : ''}</span>
+              </div>
+              <p class="tl-title">{e.title}</p>
+              {includeNotes && e.body && <div class="tl-body" set:html={renderMarkdown(e.body)} />}
+            </li>
+          ))}
+        </ol>
+      )}
+    </section>
+  </article>
+</Layout>
+
+<style>
+  h3 {
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.3rem;
+  }
+  .count,
+  .muted {
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+  .hl-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+  .hl-group ul {
+    padding-left: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.9rem;
+  }
+  .hl-note {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.1rem;
+  }
+  .skills-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .skill-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+  .skill-list li {
+    font-size: 0.8rem;
+    padding: 0.05rem 0.45rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+  }
+  .contacts {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.9rem;
+  }
+  .sheet-timeline {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .sheet-timeline li {
+    border-left: 2px solid var(--border-strong);
+    padding-left: 0.75rem;
+  }
+  .sheet-timeline li.is-upcoming {
+    border-left-width: 4px;
+  }
+  .tl-head {
+    display: flex;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .tl-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  .tl-body {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+  .tl-body :global(ul),
+  .tl-body :global(ol) {
+    padding-left: 1.25rem;
+  }
+  @media (max-width: 480px) {
+    .skills-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

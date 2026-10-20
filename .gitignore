@@ -13,3 +13,4 @@ yarn-error.log*
 pnpm-debug.log*
 coverage/
 .DS_Store
+job-tracker-export-*.json

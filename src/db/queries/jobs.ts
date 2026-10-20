@@ -4,6 +4,7 @@ import config from '../../config';
 import type { CreateJobInput, UpdateJobInput } from '../../lib/validation/job';
 import { INTERVIEW_EVENT_TYPES } from '../../lib/validation/event';
 import { todayInTz } from '../../lib/dates';
+import { prepareDescription } from '../../lib/highlights/html';
 
 const stageLabel = (id: string) => config.pipeline.stages.find((s) => s.id === id)?.label ?? id;
 
@@ -52,8 +53,7 @@ export async function createJob(input: CreateJobInput) {
       salaryCurrency: input.salaryCurrency || 'USD',
       salaryPeriod: input.salaryPeriod ?? null,
       url: cleanUrl,
-      descriptionHtml: input.descriptionHtml || null,
-      descriptionText: input.descriptionText || null,
+      ...prepareDescription({ html: input.descriptionHtml, text: input.descriptionText }),
       source: input.source || 'manual',
       fieldSources: input.fieldSources || null,
       status: input.status || 'saved',
@@ -277,8 +277,13 @@ export async function updateJob(id: string, input: UpdateJobInput) {
   if (input.salaryCurrency !== undefined) updateValues.salaryCurrency = input.salaryCurrency;
   if (input.salaryPeriod !== undefined) updateValues.salaryPeriod = input.salaryPeriod;
   if (input.url !== undefined) updateValues.url = input.url?.trim() || null;
-  if (input.descriptionHtml !== undefined) updateValues.descriptionHtml = input.descriptionHtml;
-  if (input.descriptionText !== undefined) updateValues.descriptionText = input.descriptionText;
+  if (input.descriptionHtml !== undefined) {
+    Object.assign(updateValues, prepareDescription({ html: input.descriptionHtml }));
+  } else if (input.descriptionText !== undefined && (input.descriptionText || null) !== existing.descriptionText) {
+    // Text-only edits regenerate the HTML. Unchanged text is skipped so formatted HTML
+    // (e.g. from extraction) survives saving other fields through the edit form.
+    Object.assign(updateValues, prepareDescription({ text: input.descriptionText }));
+  }
   if (input.priority !== undefined) updateValues.priority = input.priority;
   if (input.boardOrder !== undefined) updateValues.boardOrder = input.boardOrder;
   if (input.nextAction !== undefined) updateValues.nextAction = input.nextAction;

@@ -1,0 +1,40 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ProfileKit, { type KitItem } from '../components/profile/ProfileKit';
+import config from '../config';
+import { listProfileItems } from '../db/queries/profile';
+
+const grouped = await listProfileItems();
+const items: Record<string, KitItem[]> = {};
+for (const section of config.profile.sections) {
+  items[section] = (grouped[section] ?? []).map((row) => ({ id: row.id, data: row.data }));
+}
+---
+
+<Layout title="Application Kit">
+  <div class="profile-page">
+    <div class="profile-header">
+      <h1>Application Kit</h1>
+      <p class="subtitle">Copy-ready answers for application forms. Keep this open in a narrow window beside the form.</p>
+    </div>
+    <ProfileKit client:load sections={config.profile.sections} items={items} />
+  </div>
+</Layout>
+
+<style>
+  .profile-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 48rem;
+  }
+  .profile-header h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+</style>

@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@electric-sql/pglite": "^0.5.8",
     "@types/node": "^22.13.10",
     "@types/sanitize-html": "^2.13.0",
     "drizzle-kit": "^0.31.11",

@@ -1,0 +1,34 @@
+---
+interface Props {
+  jobId: string;
+  other: { href: string; label: string };
+}
+const { jobId, other } = Astro.props;
+---
+
+<div class="sheet-toolbar no-print">
+  <a href={`/jobs/${jobId}`} class="btn btn-sm">← Back to job</a>
+  <a href={other.href} class="btn btn-sm">{other.label}</a>
+  <button type="button" class="btn btn-sm btn-primary" data-print>Print</button>
+</div>
+
+<script>
+  document.querySelector('[data-print]')?.addEventListener('click', () => window.print());
+  // Open the print dialog only when explicitly requested.
+  if (new URLSearchParams(window.location.search).get('print') === '1') {
+    if (document.readyState === 'complete') window.print();
+    else window.addEventListener('load', () => window.print(), { once: true });
+  }
+</script>
+
+<style>
+  .sheet-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .sheet-toolbar button {
+    margin-left: auto;
+  }
+</style>

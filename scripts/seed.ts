@@ -3,6 +3,7 @@ import { drizzle } from 'drizzle-orm/neon-http';
 import * as schema from '../src/db/schema';
 import * as dotenv from 'dotenv';
 import { sql } from 'drizzle-orm';
+import { prepareDescription } from '../src/lib/highlights/html';
 
 dotenv.config();
 
@@ -91,8 +92,6 @@ async function runSeed() {
       url: 'https://example.com/jobs/acme-senior-fe',
       descriptionHtml:
         '<p>We are seeking an experienced <strong>Frontend Engineer</strong> with deep expertise in modern web architectures and performance.</p><p>Key requirements include 5+ years with TypeScript and React or Astro, building accessible design systems.</p><p>Competitive equity and 401(k) match included.</p>',
-      descriptionText:
-        'We are seeking an experienced Frontend Engineer with deep expertise in modern web architectures and performance. Key requirements include 5+ years with TypeScript and React or Astro, building accessible design systems. Competitive equity and 401(k) match included.',
       skills: ['TypeScript', 'React', 'Astro', 'CSS'],
     },
     {
@@ -113,8 +112,6 @@ async function runSeed() {
       url: 'https://example.com/jobs/starlight-fullstack',
       descriptionHtml:
         '<p>Join our robotics telemetry team. You will build dashboards using TypeScript, Node.js, and PostgreSQL.</p><p>Nice to have: experience with WebSockets and real-time streaming.</p>',
-      descriptionText:
-        'Join our robotics telemetry team. You will build dashboards using TypeScript, Node.js, and PostgreSQL. Nice to have: experience with WebSockets and real-time streaming.',
       skills: ['TypeScript', 'Node.js', 'PostgreSQL'],
     },
     {
@@ -135,8 +132,6 @@ async function runSeed() {
       url: 'https://example.com/jobs/apex-staff-architect',
       descriptionHtml:
         '<p>Lead our core architecture initiatives across distributed database layers and serverless microservices.</p><p>Requires deep database scaling experience.</p>',
-      descriptionText:
-        'Lead our core architecture initiatives across distributed database layers and serverless microservices. Requires deep database scaling experience.',
       skills: ['TypeScript', 'PostgreSQL', 'Docker'],
     },
     {
@@ -157,8 +152,6 @@ async function runSeed() {
       url: 'https://example.com/jobs/globex-ui-platform',
       descriptionHtml:
         '<p>Globex is scaling our front-end infrastructure team. You will maintain our UI component library.</p>',
-      descriptionText:
-        'Globex is scaling our front-end infrastructure team. You will maintain our UI component library.',
       skills: ['JavaScript', 'React', 'CSS'],
     },
     {
@@ -179,8 +172,6 @@ async function runSeed() {
       url: 'https://example.com/jobs/initech-backend',
       descriptionHtml:
         '<p>Work with our API services team building high throughput endpoints in Node.js and GraphQL.</p>',
-      descriptionText:
-        'Work with our API services team building high throughput endpoints in Node.js and GraphQL.',
       skills: ['Node.js', 'GraphQL', 'PostgreSQL'],
     },
     {
@@ -200,7 +191,6 @@ async function runSeed() {
       appliedAt: null,
       url: 'https://example.com/jobs/umbrella-cloud-lead',
       descriptionHtml: '<p>Manage container orchestration and infrastructure automation.</p>',
-      descriptionText: 'Manage container orchestration and infrastructure automation.',
       skills: ['Docker'],
     },
     {
@@ -220,7 +210,6 @@ async function runSeed() {
       appliedAt: pastDays(25),
       url: 'https://example.com/jobs/soylent-web-app',
       descriptionHtml: '<p>Internal tools web application development.</p>',
-      descriptionText: 'Internal tools web application development.',
       skills: ['JavaScript', 'React'],
     },
     {
@@ -240,7 +229,6 @@ async function runSeed() {
       appliedAt: pastDays(18),
       url: 'https://example.com/jobs/hooli-platform',
       descriptionHtml: '<p>Withdrew after receiving offer from Apex Analytics.</p>',
-      descriptionText: 'Withdrew after receiving offer from Apex Analytics.',
       skills: ['TypeScript', 'GraphQL'],
     },
   ];
@@ -252,6 +240,8 @@ async function runSeed() {
       .insert(schema.jobs)
       .values({
         ...jobFields,
+        // description_text is always derived from the sanitized HTML so highlight offsets line up.
+        ...prepareDescription({ html: jobFields.descriptionHtml }),
         createdAt: pastDays(10),
         updatedAt: pastDays(1),
       })
@@ -330,20 +320,28 @@ async function runSeed() {
       });
     }
 
-    // Add synthetic highlight to first job
-    if (job.title === 'Senior Frontend Engineer') {
-      const quote = '5+ years with TypeScript and React or Astro';
-      const offset = job.descriptionText!.indexOf(quote);
-      if (offset >= 0) {
+    // Add synthetic highlights to the first job, including an overlapping pair
+    if (job.title === 'Senior Frontend Engineer' && job.descriptionText) {
+      const text = job.descriptionText;
+      const specs = [
+        { quote: '5+ years with TypeScript and React or Astro', category: 'requirement', note: 'Lead with 6 years of TypeScript and React' },
+        { quote: 'TypeScript', category: 'keyword', note: null },
+        { quote: 'accessible design systems', category: 'nice', note: 'Mention the shared component library project' },
+        { quote: 'Competitive equity and 401(k) match', category: 'perk', note: null },
+      ];
+      for (const spec of specs) {
+        const start = text.indexOf(spec.quote);
+        if (start < 0) continue;
+        const end = start + spec.quote.length;
         await db.insert(schema.highlights).values({
           jobId: job.id,
-          startOffset: offset,
-          endOffset: offset + quote.length,
-          quote,
-          prefix: 'requirements include ',
-          suffix: ', building accessible ',
-          category: 'requirement',
-          note: 'Tailor resume bullets to emphasize 6 years of TypeScript and React experience',
+          startOffset: start,
+          endOffset: end,
+          quote: spec.quote,
+          prefix: text.slice(Math.max(0, start - 32), start),
+          suffix: text.slice(end, end + 32),
+          category: spec.category,
+          note: spec.note,
         });
       }
     }

@@ -1,4 +1,9 @@
+/* Loaded with media="print" from Layout.astro; the @media wrapper keeps it inert if imported elsewhere. */
 @media print {
+  @page {
+    margin: 1.5cm 1.6cm;
+  }
+
   *, *::before, *::after {
     background: transparent !important;
     color: #000 !important;
@@ -6,28 +11,24 @@
     text-shadow: none !important;
   }
 
-  body {
+  html, body {
     background: #fff !important;
-    font-size: 11pt;
-    line-height: 1.4;
+  }
+
+  body {
+    font-size: 10.5pt;
+    line-height: 1.45;
+    display: block;
+    min-height: 0;
+  }
+
+  .main-container {
+    max-width: none;
     padding: 0;
-    margin: 0;
   }
 
-  /* Keep highlight colors exact */
-  mark.hl {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    color: #000 !important;
-  }
-  mark.hl-requirement { background-color: var(--hl-requirement) !important; }
-  mark.hl-nice { background-color: var(--hl-nice) !important; }
-  mark.hl-redflag { background-color: var(--hl-redflag) !important; }
-  mark.hl-perk { background-color: var(--hl-perk) !important; }
-  mark.hl-keyword { background-color: var(--hl-keyword) !important; }
-
-  /* Hide app chrome, navigation, buttons, forms, popovers */
-  header, nav, footer, .no-print, .btn, button, form, .popover, .drag-handle, .sidebar {
+  /* App chrome and interactive UI */
+  .app-header, nav, .no-print, button, .btn, form, select, .popover, .drag-handle, details > summary {
     display: none !important;
   }
 
@@ -35,11 +36,31 @@
     display: block !important;
   }
 
-  /* Show URLs for external links when enabled */
+  /* Highlight and category colors print as shown on screen */
+  mark.hl,
+  .print-swatch {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  mark.hl {
+    background-color: var(--hl-bg) !important;
+    color: #000 !important;
+  }
+  .print-swatch {
+    background-color: var(--hl-bg) !important;
+  }
+
+  /* Print link targets after external links when print.showUrls is enabled */
   .show-urls a[href^="http"]::after {
     content: " (" attr(href) ")";
     font-size: 85%;
-    color: #555 !important;
+    color: #444 !important;
+    overflow-wrap: anywhere;
+  }
+
+  a {
+    color: #000 !important;
+    text-decoration: underline;
   }
 
   .page-break-avoid {
@@ -48,7 +69,12 @@
   }
 
   h1, h2, h3, h4 {
-    page-break-after: avoid;
     break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  p, li {
+    orphans: 3;
+    widows: 3;
   }
 }

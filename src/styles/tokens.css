@@ -27,12 +27,7 @@
   --success: #16a34a;
   --success-subtle: #f0fdf4;
 
-  /* Highlight Categories */
-  --hl-requirement: #fde68a;
-  --hl-nice: #bbf7d0;
-  --hl-redflag: #fecaca;
-  --hl-perk: #bfdbfe;
-  --hl-keyword: #e9d5ff;
+  /* Highlight category colors are generated from tracker.config.ts in Layout.astro */
 
   --hl-text-dark: #1e293b;
 
@@ -85,12 +80,6 @@
     --success: #22c55e;
     --success-subtle: #14532d33;
 
-    /* Category highlights maintain high contrast */
-    --hl-requirement: #fbbf24;
-    --hl-nice: #86efac;
-    --hl-redflag: #fca5a5;
-    --hl-perk: #93c5fd;
-    --hl-keyword: #d8b4fe;
 
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);

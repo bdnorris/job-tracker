@@ -5,6 +5,7 @@ import { getJobById } from '../../db/queries/jobs';
 import Timeline from '../../components/Timeline.astro';
 import { formatSalary, REMOTE_LABELS } from '../../lib/format';
 import { formatDate, todayInTz } from '../../lib/dates';
+import { renderDescription } from '../../lib/highlights/html';
 
 const { id } = Astro.params;
 if (!id) return Astro.redirect('/jobs');
@@ -17,6 +18,7 @@ const isArchived = Boolean(job.archivedAt);
 
 const eventError = Astro.url.searchParams.get('eventError');
 const salaryText = formatSalary(job);
+const description = renderDescription(job, job.highlights);
 const today = todayInTz();
 const nextOverdue = !!job.nextActionDate && job.nextActionDate < today;
 const PRIORITY_LABELS = ['None', 'Normal', 'High', 'Top'];
@@ -31,8 +33,8 @@ const stageLabel = currentStage ? currentStage.label : job.status;
       <a href="/jobs" class="back-link">← Back to jobs</a>
       <div class="action-buttons">
         <a href={`/jobs/${job.id}/edit`} class="btn btn-sm">Edit</a>
-        <a href={`/jobs/${job.id}/print`} class="btn btn-sm" target="_blank">Print Sheet</a>
-        <a href={`/jobs/${job.id}/prep`} class="btn btn-sm" target="_blank">Prep Sheet</a>
+        <a href={`/jobs/${job.id}/print?print=1`} class="btn btn-sm">Print job sheet</a>
+        <a href={`/jobs/${job.id}/prep?print=1`} class="btn btn-sm">Print prep sheet</a>
 
         <form action={`/api/jobs/${job.id}`} method="POST" class="inline-form" onsubmit="return confirm('Are you sure you want to delete this job posting?');">
           <input type="hidden" name="_method" value="DELETE" />
@@ -124,10 +126,8 @@ const stageLabel = currentStage ? currentStage.label : job.status;
       <!-- Main Content: Description -->
       <section class="card content-section">
         <h2>Job Description</h2>
-        {job.descriptionHtml ? (
-          <div class="description-body" set:html={job.descriptionHtml} />
-        ) : job.descriptionText ? (
-          <div class="description-body whitespace-pre-wrap">{job.descriptionText}</div>
+        {description.html ? (
+          <div class="description-body" set:html={description.html} />
         ) : (
           <p class="empty-state">No description provided.</p>
         )}
@@ -230,11 +230,14 @@ const stageLabel = currentStage ? currentStage.label : job.status;
   }
   .detail-top-nav {
     display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
     justify-content: space-between;
     align-items: center;
   }
   .action-buttons {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
     align-items: center;
   }
@@ -266,9 +269,10 @@ const stageLabel = currentStage ? currentStage.label : job.status;
   }
   .header-main {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 1rem;
+    gap: 0.5rem 1rem;
   }
   .job-title {
     font-size: 1.75rem;
@@ -351,8 +355,26 @@ const stageLabel = currentStage ? currentStage.label : job.status;
     line-height: 1.6;
     color: var(--text-secondary);
   }
-  .whitespace-pre-wrap {
-    white-space: pre-wrap;
+  .description-body > :global(* + *) {
+    margin-top: 0.75rem;
+  }
+  .description-body :global(h1),
+  .description-body :global(h2),
+  .description-body :global(h3),
+  .description-body :global(h4) {
+    border: none;
+    padding: 0;
+    margin-bottom: 0;
+  }
+  .description-body :global(ul),
+  .description-body :global(ol) {
+    padding-left: 1.4rem;
+  }
+  .description-body :global(h1),
+  .description-body :global(h2),
+  .description-body :global(h3) {
+    font-size: 1rem;
+    color: var(--text-primary);
   }
   .sidebar-section {
     display: flex;

@@ -1,0 +1,213 @@
+.kit {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.kit-jump {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.kit-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  scroll-margin-top: calc(var(--header-height) + 0.75rem);
+}
+
+.kit-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.375rem;
+}
+
+.kit-section-header h2 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.kit-empty {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.kit-items {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.kit-item {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 0.625rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.kit-item:focus-visible {
+  outline-offset: 0;
+}
+
+.kit-item.is-editing {
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.kit-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.kit-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'label button'
+    'value button';
+  column-gap: 0.5rem;
+  align-items: start;
+}
+
+.kit-field dt {
+  grid-area: label;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.kit-field dd {
+  grid-area: value;
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.kit-field-textarea dd {
+  white-space: pre-wrap;
+}
+
+.kit-field .copy-btn {
+  grid-area: button;
+  align-self: center;
+}
+
+.copy-btn {
+  min-width: 4.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.copy-btn.is-copied {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.copy-btn.is-failed {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.kit-bullets-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.25rem;
+}
+
+.kit-bullets ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.kit-bullets li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.85rem;
+  padding-left: 0.625rem;
+  border-left: 2px solid var(--border-subtle);
+}
+
+.kit-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--border-subtle);
+}
+
+.kit-copy-actions,
+.kit-manage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.kit-manage-actions {
+  margin-left: auto;
+}
+
+.kit-item-actions .btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.kit-form {
+  border: 1px solid var(--primary-border);
+  background-color: var(--bg-surface);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.kit-form-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.kit-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.kit-form-field label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.kit-form-field [aria-invalid='true'] {
+  border-color: var(--danger);
+}
+
+.kit-form-error {
+  font-size: 0.75rem;
+  color: var(--danger);
+}
+
+.kit-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

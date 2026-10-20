@@ -1,0 +1,99 @@
+---
+import config from '../../config';
+import { formatSalary, REMOTE_LABELS } from '../../lib/format';
+import { formatDate, todayInTz } from '../../lib/dates';
+
+interface Props {
+  job: {
+    title: string;
+    company: string;
+    location: string | null;
+    remoteType: string;
+    salaryMin: number | null;
+    salaryMax: number | null;
+    salaryCurrency: string;
+    salaryPeriod: string | null;
+    status: string;
+    url: string | null;
+    appliedAt: Date | null;
+    nextAction: string | null;
+    nextActionDate: string | null;
+  };
+  kind: string;
+}
+
+const { job, kind } = Astro.props;
+const stage = config.pipeline.stages.find((s) => s.id === job.status)?.label ?? job.status;
+const salary = formatSalary(job);
+const subtitle = [job.company, job.location, REMOTE_LABELS[job.remoteType] !== 'Unknown' ? REMOTE_LABELS[job.remoteType] : null]
+  .filter(Boolean)
+  .join(' · ');
+---
+
+<header class="sheet-header page-break-avoid">
+  <p class="sheet-kind">{kind} · {formatDate(todayInTz())}</p>
+  <h1>{job.title}</h1>
+  <p class="sheet-subtitle">{subtitle}</p>
+  <dl class="sheet-meta">
+    <div><dt>Status</dt><dd>{stage}</dd></div>
+    {salary && <div><dt>Salary</dt><dd>{salary}</dd></div>}
+    {job.appliedAt && <div><dt>Applied</dt><dd>{formatDate(job.appliedAt)}</dd></div>}
+    {(job.nextAction || job.nextActionDate) && (
+      <div>
+        <dt>Next action</dt>
+        <dd>{[job.nextAction, job.nextActionDate ? formatDate(job.nextActionDate) : null].filter(Boolean).join(' · ')}</dd>
+      </div>
+    )}
+    {job.url && (
+      <div class="sheet-meta-wide">
+        <dt>Posting</dt>
+        <dd><a href={job.url}>{config.print.showUrls ? 'Original posting' : job.url}</a></dd>
+      </div>
+    )}
+  </dl>
+</header>
+
+<style>
+  .sheet-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-bottom: 0.875rem;
+    border-bottom: 2px solid var(--text-primary);
+  }
+  .sheet-kind {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+  h1 {
+    font-size: 1.6rem;
+    line-height: 1.2;
+  }
+  .sheet-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+  }
+  .sheet-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.75rem;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+  }
+  .sheet-meta dt {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+  }
+  .sheet-meta dd {
+    font-variant-numeric: tabular-nums;
+  }
+  .sheet-meta-wide dd {
+    overflow-wrap: anywhere;
+  }
+</style>

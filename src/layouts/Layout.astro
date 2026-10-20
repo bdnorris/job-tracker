@@ -1,7 +1,7 @@
 ---
 import '../styles/tokens.css';
 import '../styles/base.css';
-import '../styles/print.css';
+import printCssUrl from '../styles/print.css?url';
 import config from '../config';
 
 interface Props {
@@ -13,6 +13,9 @@ const { title, showNav = true } = Astro.props;
 const pageTitle = title ? `${title} · ${config.app.name}` : config.app.name;
 const currentPath = Astro.url.pathname;
 const printClass = config.print.showUrls ? 'show-urls' : '';
+
+// Category ids are validated as CSS-safe and colors as hex in the config schema.
+const highlightCss = config.highlights.categories.map((c) => `.hl-${c.id}{--hl-bg:${c.color}}`).join('');
 ---
 
 <!doctype html>
@@ -22,6 +25,10 @@ const printClass = config.print.showUrls ? 'show-urls' : '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Single-user job tracking board" />
     <title>{pageTitle}</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232563eb'/%3E%3Cpath d='M9 10h14M9 16h14M9 22h9' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href={printCssUrl} media="print" />
+    <style is:inline set:html={highlightCss}></style>
+    <slot name="head" />
   </head>
   <body class={printClass}>
     <a href="#main-content" class="sr-only">Skip to content</a>
@@ -109,6 +116,32 @@ const printClass = config.print.showUrls ? 'show-urls' : '';
         width: 100%;
         margin: 0 auto;
         padding: 1.5rem;
+      }
+      .main-nav a {
+        white-space: nowrap;
+      }
+      @media (max-width: 720px) {
+        .app-header {
+          height: auto;
+        }
+        .header-inner {
+          flex-wrap: wrap;
+          gap: 0.25rem 0.75rem;
+          padding: 0.5rem 1rem;
+        }
+        .main-nav {
+          order: 3;
+          width: 100%;
+          overflow-x: auto;
+          gap: 0.125rem;
+          margin: 0 -0.5rem;
+        }
+        .main-nav a {
+          padding: 0.35rem 0.5rem;
+        }
+        .main-container {
+          padding: 1rem;
+        }
       }
     </style>
   </body>

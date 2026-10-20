@@ -1,0 +1,73 @@
+---
+import Layout from '../../../layouts/Layout.astro';
+import SheetHeader from '../../../components/print/SheetHeader.astro';
+import SheetToolbar from '../../../components/print/SheetToolbar.astro';
+import config from '../../../config';
+import { getJobById } from '../../../db/queries/jobs';
+import { renderDescription } from '../../../lib/highlights/html';
+import { isUuid } from '../../../lib/api';
+import '../../../styles/sheet.css';
+
+const { id } = Astro.params;
+if (!isUuid(id)) return Astro.redirect('/jobs');
+const job = await getJobById(id);
+if (!job) return Astro.redirect('/jobs');
+
+const description = renderDescription(job, job.highlights);
+const usedCategories = new Set(
+  job.highlights.filter((h) => !description.orphaned.includes(h)).map((h) => h.category)
+);
+const legend = config.highlights.categories.filter((c) => usedCategories.has(c.id));
+---
+
+<Layout title={`Job sheet: ${job.title}`} showNav={false}>
+  <SheetToolbar jobId={job.id} other={{ href: `/jobs/${job.id}/prep`, label: 'Prep sheet' }} />
+  <article class="sheet">
+    <SheetHeader job={job} kind="Job sheet" />
+
+    <section aria-labelledby="desc-heading">
+      <h2 id="desc-heading">Description</h2>
+      {legend.length > 0 && (
+        <ul class="sheet-legend" aria-label="Highlight categories">
+          {legend.map((c) => (
+            <li><span class={`print-swatch hl-${c.id}`} aria-hidden="true"></span>{c.label}</li>
+          ))}
+        </ul>
+      )}
+      {description.html ? (
+        <div class="description-body" set:html={description.html} />
+      ) : (
+        <p class="sheet-empty">No description saved.</p>
+      )}
+    </section>
+  </article>
+</Layout>
+
+<style>
+  .sheet-legend {
+    margin-bottom: 0.75rem;
+  }
+  .description-body {
+    line-height: 1.6;
+  }
+  .description-body > :global(* + *) {
+    margin-top: 0.6rem;
+  }
+  .description-body :global(h1),
+  .description-body :global(h2),
+  .description-body :global(h3),
+  .description-body :global(h4) {
+    border: none;
+    padding: 0;
+    margin-bottom: 0;
+  }
+  .description-body :global(ul),
+  .description-body :global(ol) {
+    padding-left: 1.4rem;
+  }
+  .description-body :global(h1),
+  .description-body :global(h2),
+  .description-body :global(h3) {
+    font-size: 1rem;
+  }
+</style>

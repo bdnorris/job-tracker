@@ -1,0 +1,68 @@
+/* Shared screen styles for the printable job and prep sheets. */
+.sheet {
+  max-width: 50rem;
+  margin: 0 auto;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 2rem 2.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sheet h2 {
+  font-size: 1.05rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sheet-empty {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.print-swatch {
+  display: inline-block;
+  width: 0.85em;
+  height: 0.85em;
+  border-radius: 2px;
+  background-color: var(--hl-bg);
+  border: 1px solid rgb(0 0 0 / 0.15);
+  vertical-align: -0.1em;
+}
+
+.sheet-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  list-style: none;
+}
+
+.sheet-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+@media (max-width: 640px) {
+  .sheet {
+    padding: 1.25rem 1rem;
+    border-radius: 0;
+  }
+}
+
+@media print {
+  .sheet {
+    max-width: none;
+    border: none;
+    padding: 0;
+    gap: 1.1rem;
+  }
+  .sheet h2 {
+    border-bottom-color: #999 !important;
+  }
+}

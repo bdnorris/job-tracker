@@ -146,13 +146,12 @@ button, input, select, textarea {
 
 /* Category highlights */
 mark.hl {
+  background-color: var(--hl-bg);
   color: var(--hl-text-dark);
-  padding: 0.1em 0.2em;
+  /* No horizontal padding: a highlight split across elements must not add gaps inside words. */
+  padding: 0.1em 0;
   border-radius: 2px;
-  cursor: pointer;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
 }
-mark.hl-requirement { background-color: var(--hl-requirement); }
-mark.hl-nice { background-color: var(--hl-nice); }
-mark.hl-redflag { background-color: var(--hl-redflag); }
-mark.hl-perk { background-color: var(--hl-perk); }
-mark.hl-keyword { background-color: var(--hl-keyword); }
+/* Per-category background colors are generated from config in Layout.astro. */

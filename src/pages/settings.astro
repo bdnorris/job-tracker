@@ -82,6 +82,27 @@ const hasAiKey = Boolean(process.env.ANTHROPIC_API_KEY);
         </div>
       </section>
 
+      <!-- Backup -->
+      <section class="card settings-card col-span-2" aria-labelledby="backup-heading">
+        <h2 id="backup-heading">Backup &amp; Restore</h2>
+        <p class="help">
+          Export downloads everything (jobs, skills, highlights, timeline and application kit) as one JSON file.
+          Importing merges a file into this database: matching rows are updated, nothing is deleted.
+        </p>
+        <div class="backup-actions">
+          <a href="/api/export" class="btn" download>Download export</a>
+          <div class="import-picker">
+            <label for="import-file" class="import-label">Import a file</label>
+            <input type="file" id="import-file" accept="application/json,.json" />
+          </div>
+        </div>
+        <div id="import-result" class="import-result" aria-live="polite" hidden></div>
+        <div id="import-confirm" class="import-confirm" hidden>
+          <button type="button" id="import-commit" class="btn btn-primary">Import now</button>
+          <button type="button" id="import-cancel" class="btn">Cancel</button>
+        </div>
+      </section>
+
       <!-- Highlight Categories -->
       <section class="card settings-card col-span-2">
         <h2>Highlight Categories</h2>
@@ -98,7 +119,179 @@ const hasAiKey = Boolean(process.env.ANTHROPIC_API_KEY);
   </div>
 </Layout>
 
+<script>
+  const fileInput = document.getElementById('import-file') as HTMLInputElement;
+  const result = document.getElementById('import-result')!;
+  const confirmBox = document.getElementById('import-confirm')!;
+  const commitBtn = document.getElementById('import-commit') as HTMLButtonElement;
+  const cancelBtn = document.getElementById('import-cancel') as HTMLButtonElement;
+  const LABELS: Record<string, string> = {
+    skills: 'Skills',
+    jobs: 'Jobs',
+    jobSkills: 'Job skills',
+    highlights: 'Highlights',
+    events: 'Timeline events',
+    profileItems: 'Application kit items',
+  };
+  let payload: string | null = null;
+
+  const el = (tag: string, text?: string, cls?: string) => {
+    const e = document.createElement(tag);
+    if (text !== undefined) e.textContent = text;
+    if (cls) e.className = cls;
+    return e;
+  };
+
+  function show(nodes: Node[], tone: 'info' | 'error' | 'success' = 'info') {
+    result.replaceChildren(...nodes);
+    result.dataset.tone = tone;
+    result.hidden = false;
+  }
+
+  function summaryTable(summary: any) {
+    const table = el('table', undefined, 'import-table');
+    const thead = el('thead');
+    const tbody = el('tbody');
+    const head = el('tr');
+    for (const h of ['Data', 'New', 'Updated', 'Matched existing']) head.append(el('th', h));
+    thead.append(head);
+    for (const [key, c] of Object.entries<any>(summary.tables)) {
+      const row = el('tr');
+      row.append(el('td', LABELS[key] ?? key), el('td', String(c.create)), el('td', String(c.update)), el('td', String(c.reuse)));
+      tbody.append(row);
+    }
+    table.append(thead, tbody);
+    const nodes: Node[] = [table];
+    if (summary.warnings?.length) {
+      const ul = el('ul', undefined, 'import-warnings');
+      for (const w of summary.warnings) ul.append(el('li', w));
+      nodes.push(ul);
+    }
+    return nodes;
+  }
+
+  async function post(dryRun: boolean) {
+    const res = await fetch(`/api/import${dryRun ? '?dryRun=1' : ''}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: payload!,
+    });
+    return { ok: res.ok, body: await res.json().catch(() => ({})) };
+  }
+
+  function showError(body: any) {
+    const nodes: Node[] = [el('p', body?.error?.message || 'Import failed.', 'import-status')];
+    const errors: string[] = body?.error?.fields?.errors ?? [];
+    if (errors.length) {
+      const ul = el('ul');
+      for (const e of errors) ul.append(el('li', e));
+      nodes.push(ul);
+    }
+    show(nodes, 'error');
+  }
+
+  fileInput?.addEventListener('change', async () => {
+    confirmBox.hidden = true;
+    const file = fileInput.files?.[0];
+    if (!file) return;
+    show([el('p', `Checking ${file.name}…`)]);
+    payload = await file.text();
+    const { ok, body } = await post(true);
+    if (!ok) {
+      payload = null;
+      return showError(body);
+    }
+    show([el('p', `Dry run for ${file.name}. Nothing has been saved yet.`, 'import-status'), ...summaryTable(body.summary)]);
+    confirmBox.hidden = false;
+    commitBtn.focus();
+  });
+
+  commitBtn?.addEventListener('click', async () => {
+    if (!payload) return;
+    commitBtn.disabled = true;
+    const { ok, body } = await post(false);
+    commitBtn.disabled = false;
+    confirmBox.hidden = true;
+    payload = null;
+    fileInput.value = '';
+    if (!ok) return showError(body);
+    show([el('p', 'Import complete.', 'import-status'), ...summaryTable(body.summary)], 'success');
+  });
+
+  cancelBtn?.addEventListener('click', () => {
+    payload = null;
+    fileInput.value = '';
+    confirmBox.hidden = true;
+    show([el('p', 'Import cancelled. Nothing was changed.')]);
+  });
+</script>
+
 <style>
+  .help {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+  .backup-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+  }
+  .import-picker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+  }
+  .import-label {
+    font-weight: 600;
+  }
+  .import-result {
+    font-size: 0.875rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    background-color: var(--bg-subtle);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .import-result[data-tone='error'] {
+    border-color: var(--danger-border);
+    background-color: var(--danger-subtle);
+  }
+  .import-result[data-tone='success'] {
+    border-color: var(--success);
+    background-color: var(--success-subtle);
+  }
+  .import-result :global(.import-status) {
+    font-weight: 600;
+  }
+  .import-result :global(ul) {
+    padding-left: 1.25rem;
+  }
+  .import-result :global(.import-table) {
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+  }
+  .import-result :global(.import-table th),
+  .import-result :global(.import-table td) {
+    text-align: left;
+    padding: 0.2rem 1rem 0.2rem 0;
+  }
+  .import-result :global(.import-table th) {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+  .import-confirm {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .import-result[hidden],
+  .import-confirm[hidden] {
+    display: none;
+  }
   .settings-page {
     display: flex;
     flex-direction: column;
@@ -115,7 +308,7 @@ const hasAiKey = Boolean(process.env.ANTHROPIC_API_KEY);
   }
   .settings-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.5rem;
   }
   .col-span-2 {
@@ -134,9 +327,12 @@ const hasAiKey = Boolean(process.env.ANTHROPIC_API_KEY);
   }
   .config-list {
     display: grid;
-    grid-template-columns: 140px 1fr;
+    grid-template-columns: 140px minmax(0, 1fr);
     gap: 0.75rem;
     font-size: 0.875rem;
+  }
+  .config-list dd {
+    overflow-wrap: anywhere;
   }
   .config-list dt {
     font-weight: 600;
@@ -192,7 +388,14 @@ const hasAiKey = Boolean(process.env.ANTHROPIC_API_KEY);
   }
   @media (max-width: 768px) {
     .settings-grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .config-list {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.15rem;
+    }
+    .config-list dd {
+      margin-bottom: 0.5rem;
     }
     .col-span-2 {
       grid-column: span 1;

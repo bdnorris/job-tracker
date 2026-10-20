@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+/** Application kit sections with a defined item schema (src/lib/validation/profile.ts). */
+export const PROFILE_SECTIONS = ['links', 'work', 'education', 'answers', 'snippets'] as const;
+
 export const StageSchema = z.object({
   id: z.string().min(1, 'Stage id cannot be empty'),
   label: z.string().min(1, 'Stage label cannot be empty'),
@@ -7,7 +10,9 @@ export const StageSchema = z.object({
 });
 
 export const CategorySchema = z.object({
-  id: z.string().min(1, 'Category id cannot be empty'),
+  id: z
+    .string()
+    .regex(/^[a-z0-9_-]+$/i, 'Category id may only contain letters, numbers, "-" and "_" (it is used as a CSS class)'),
   label: z.string().min(1, 'Category label cannot be empty'),
   color: z.string().regex(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'Category color must be a valid hex color code'),
 });
@@ -64,7 +69,10 @@ export const TrackerConfigSchema = z.object({
     }).default({}),
   }).default({}),
   profile: z.object({
-    sections: z.array(z.string()).default(['links', 'work', 'education', 'answers', 'snippets']),
+    sections: z
+      .array(z.enum(PROFILE_SECTIONS))
+      .refine((s) => new Set(s).size === s.length, 'profile.sections must not repeat a section')
+      .default([...PROFILE_SECTIONS]),
   }).default({}),
   print: z.object({
     showUrls: z.boolean().default(true),
