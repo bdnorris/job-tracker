@@ -42,3 +42,7 @@
 
 ## Status Validation
 - **Decision**: Job `status` is validated against config stage ids in the Zod schemas. Jobs whose status was later removed from config are not shown on the board but still appear in the list view and can be moved to a valid stage from the detail page.
+
+## sanitize-html Version Pin
+- **Decision**: `sanitize-html` is pinned to exactly `2.17.5`.
+- **Rationale**: Releases from 2.17.6 on depend on `htmlparser2@12`, which is ESM-only, while `sanitize-html` itself is CommonJS and loads it with `require()`. That fails with `ERR_REQUIRE_ESM` in the Netlify function runtime. 2.17.5 uses `htmlparser2@10`, which ships a CommonJS build. Before unpinning, confirm a newer release works with `node --no-experimental-require-module -e "require('sanitize-html')"`.
