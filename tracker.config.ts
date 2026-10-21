@@ -39,9 +39,10 @@ export default defineConfig({
   scraper: {
     order: ['greenhouse', 'lever', 'ashby', 'jsonld', 'heuristic', 'ai'],
     fetchTimeoutMs: 8000,
+    requestBudgetMs: 9000, // total time for one extraction request (Netlify default limit is 10s)
     userAgent: 'JobTracker/1.0 (+https://github.com/<owner>/<repo>)',
     ai: {
-      model: 'claude-3-5-haiku-20241022',
+      model: 'claude-haiku-5-5',
       fillGapsOnly: true,
       maxInputChars: 30000,
     },

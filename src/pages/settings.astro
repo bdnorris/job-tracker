@@ -1,8 +1,10 @@
 ---
 import Layout from '../layouts/Layout.astro';
 import config from '../config';
+import { EXTRACTORS } from '../lib/extract/registry';
 
 const hasAiKey = Boolean(process.env.ANTHROPIC_API_KEY);
+const extractorRows = config.scraper.order.map((name) => ({ name, enabled: EXTRACTORS[name]?.enabled() ?? false }));
 ---
 
 <Layout title="Settings">
@@ -32,14 +34,18 @@ const hasAiKey = Boolean(process.env.ANTHROPIC_API_KEY);
       <section class="card settings-card">
         <h2>Extraction Pipeline</h2>
         <dl class="config-list">
-          <dt>Extractor Order</dt>
+          <dt>Extractors (in order)</dt>
           <dd>
-            <div class="badges-row">
-              {config.scraper.order.map((name) => (
-                <span class="badge">{name}</span>
+            <ol class="badges-row extractor-list">
+              {extractorRows.map((x) => (
+                <li class={`badge ${x.enabled ? 'badge-success' : 'badge-muted'}`}>
+                  {x.name}<span class="sr-only">{x.enabled ? ' (enabled)' : ' (disabled)'}</span>
+                </li>
               ))}
-            </div>
+            </ol>
           </dd>
+          <dt>Request budget</dt>
+          <dd>{config.scraper.requestBudgetMs} ms</dd>
           <dt>Fetch Timeout</dt>
           <dd>{config.scraper.fetchTimeoutMs} ms</dd>
           <dt>AI Extraction Status</dt>
@@ -340,6 +346,9 @@ const hasAiKey = Boolean(process.env.ANTHROPIC_API_KEY);
   }
   .config-list dd {
     color: var(--text-primary);
+  }
+  .extractor-list {
+    list-style: none;
   }
   .badges-row {
     display: flex;

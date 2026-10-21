@@ -1,0 +1,49 @@
+{
+  "apiVersion": "1",
+  "jobs": [
+    {
+      "id": "11111111-aaaa-4bbb-8ccc-000000000001",
+      "title": "Recruiter",
+      "location": "New York",
+      "secondaryLocations": [],
+      "department": "People",
+      "team": "Talent",
+      "isListed": true,
+      "isRemote": false,
+      "workplaceType": "OnSite",
+      "descriptionHtml": "<p>Hire great people.</p>",
+      "descriptionPlain": "Hire great people.",
+      "publishedAt": "2026-08-01T00:00:00.000+00:00",
+      "employmentType": "FullTime",
+      "jobUrl": "https://jobs.ashbyhq.com/demo-co/11111111-aaaa-4bbb-8ccc-000000000001",
+      "applyUrl": "https://jobs.ashbyhq.com/demo-co/11111111-aaaa-4bbb-8ccc-000000000001/application",
+      "compensation": { "compensationTierSummary": null, "scrapeableCompensationSalarySummary": null, "compensationTiers": [], "summaryComponents": [] }
+    },
+    {
+      "id": "22222222-bbbb-4ccc-8ddd-000000000002",
+      "title": "Product Designer",
+      "location": "Remote - US",
+      "secondaryLocations": [{ "location": "Remote - Canada", "address": null }],
+      "department": "Design",
+      "team": "Product",
+      "isListed": true,
+      "isRemote": true,
+      "workplaceType": "Remote",
+      "descriptionHtml": "<h3>About Demo Co</h3><p>Design tools for small teams using React.</p>",
+      "descriptionPlain": "About Demo Co\nDesign tools for small teams using React.",
+      "publishedAt": "2026-09-15T00:00:00.000+00:00",
+      "employmentType": "FullTime",
+      "jobUrl": "https://jobs.ashbyhq.com/demo-co/22222222-bbbb-4ccc-8ddd-000000000002",
+      "applyUrl": "https://jobs.ashbyhq.com/demo-co/22222222-bbbb-4ccc-8ddd-000000000002/application",
+      "compensation": {
+        "compensationTierSummary": "$120K – $150K • Offers Equity",
+        "scrapeableCompensationSalarySummary": "$120K - $150K",
+        "compensationTiers": [],
+        "summaryComponents": [
+          { "compensationType": "EquityPercentage", "interval": "NONE", "currencyCode": null, "minValue": null, "maxValue": null },
+          { "compensationType": "Salary", "interval": "1 YEAR", "currencyCode": "USD", "minValue": 120000, "maxValue": 150000 }
+        ]
+      }
+    }
+  ]
+}

@@ -58,6 +58,12 @@ describe('textToHtml / prepareDescription', () => {
     expect(prepareDescription({ text: '  ' })).toEqual({ descriptionHtml: null, descriptionText: null });
   });
 
+  it('keeps div blocks so separate paragraphs stay separate', () => {
+    const r = prepareDescription({ html: '<div class="x">First block</div><div>Second block</div>' });
+    expect(r.descriptionHtml).toBe('<div>First block</div><div>Second block</div>');
+    expect(r.descriptionText).toBe('First block\nSecond block');
+  });
+
   it('adds safe rel and target to links', () => {
     expect(sanitizeDescriptionHtml('<a href="https://example.com">x</a>')).toContain('rel="noopener noreferrer"');
   });

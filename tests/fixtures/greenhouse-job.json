@@ -1,0 +1,24 @@
+{
+  "id": 4012345678,
+  "internal_job_id": 3901234567,
+  "title": "Senior Frontend Engineer ",
+  "company_name": "Example Corp",
+  "location": { "name": "Remote, United States" },
+  "absolute_url": "https://job-boards.greenhouse.io/examplecorp/jobs/4012345678",
+  "first_published": "2026-09-01T12:00:00-04:00",
+  "updated_at": "2026-10-01T09:30:00-04:00",
+  "requisition_id": "ENG-123",
+  "language": "en",
+  "metadata": null,
+  "data_compliance": [],
+  "content": "&lt;h2&gt;&lt;strong&gt;About the role&lt;/strong&gt;&lt;/h2&gt;\n&lt;p&gt;You will build our web app with &lt;strong&gt;TypeScript&lt;/strong&gt; and React.&lt;/p&gt;\n&lt;ul&gt;\n&lt;li&gt;5+ years of frontend experience&lt;/li&gt;\n&lt;li&gt;Experience with Astro is a plus&lt;/li&gt;\n&lt;/ul&gt;\n&lt;p style=&quot;color: red&quot; onclick=&quot;alert(1)&quot;&gt;Benefits include a 401(k) match &amp;amp; more.&lt;/p&gt;",
+  "pay_input_ranges": [
+    {
+      "min_cents": 14000000,
+      "max_cents": 17500000,
+      "currency_type": "USD",
+      "title": "United States Salary Range",
+      "blurb": "<p>The base salary range for this role is listed above.</p>"
+    }
+  ]
+}

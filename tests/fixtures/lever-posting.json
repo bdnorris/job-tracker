@@ -1,0 +1,27 @@
+{
+  "id": "0b6c2a8e-1f3d-4c5b-9a7e-2d4f6a8c0e12",
+  "text": "Platform Engineer",
+  "createdAt": 1790000000000,
+  "country": "US",
+  "workplaceType": "hybrid",
+  "categories": {
+    "commitment": "Full-time",
+    "department": "Engineering",
+    "location": "Chicago, IL",
+    "team": "Platform",
+    "allLocations": ["Chicago, IL", "Austin, TX"]
+  },
+  "opening": "<div>Sample Inc is hiring.</div>",
+  "openingPlain": "Sample Inc is hiring.",
+  "description": "<div>Sample Inc builds logistics software. You will work in <b>TypeScript</b> and Go.</div>",
+  "descriptionPlain": "Sample Inc builds logistics software. You will work in TypeScript and Go.",
+  "lists": [
+    { "text": "What you'll do", "content": "<li>Run our Kubernetes clusters</li><li>Improve CI pipelines</li>" },
+    { "text": "What you'll bring", "content": "<li>3+ years with Node.js</li>" }
+  ],
+  "additional": "<div>We offer flexible hours.</div>",
+  "additionalPlain": "We offer flexible hours.",
+  "salaryRange": { "min": 130000, "max": 160000, "currency": "USD", "interval": "per-year-salary" },
+  "hostedUrl": "https://jobs.lever.co/sample-inc/0b6c2a8e-1f3d-4c5b-9a7e-2d4f6a8c0e12",
+  "applyUrl": "https://jobs.lever.co/sample-inc/0b6c2a8e-1f3d-4c5b-9a7e-2d4f6a8c0e12/apply"
+}

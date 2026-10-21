@@ -3,6 +3,9 @@ import { z } from 'zod';
 /** Application kit sections with a defined item schema (src/lib/validation/profile.ts). */
 export const PROFILE_SECTIONS = ['links', 'work', 'education', 'answers', 'snippets'] as const;
 
+/** Extractors the pipeline knows about, in the default order (src/lib/extract/). */
+export const EXTRACTOR_NAMES = ['greenhouse', 'lever', 'ashby', 'jsonld', 'heuristic', 'ai'] as const;
+
 export const StageSchema = z.object({
   id: z.string().min(1, 'Stage id cannot be empty'),
   label: z.string().min(1, 'Stage label cannot be empty'),
@@ -59,11 +62,17 @@ export const TrackerConfigSchema = z.object({
     }),
   }).default({}),
   scraper: z.object({
-    order: z.array(z.string()).default(['greenhouse', 'lever', 'ashby', 'jsonld', 'heuristic', 'ai']),
+    order: z
+      .array(z.enum(EXTRACTOR_NAMES))
+      .refine((o) => new Set(o).size === o.length, 'scraper.order must not repeat an extractor')
+      .default([...EXTRACTOR_NAMES]),
     fetchTimeoutMs: z.number().int().positive().default(8000),
+    // Wall-clock budget for one extraction request. Netlify's synchronous functions
+    // default to a 10s limit; if AI can't fit in what's left, it runs as a follow-up request.
+    requestBudgetMs: z.number().int().min(3000).default(9000),
     userAgent: z.string().default('JobTracker/1.0 (+https://github.com/<owner>/<repo>)'),
     ai: z.object({
-      model: z.string().default('claude-3-5-haiku-20241022'),
+      model: z.string().default('claude-haiku-5-5'),
       fillGapsOnly: z.boolean().default(true),
       maxInputChars: z.number().int().positive().default(30000),
     }).default({}),

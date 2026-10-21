@@ -5,11 +5,11 @@
 - **Rationale**: Single-user deployment on serverless. An in-memory map keyed by client IP tracks failure timestamps. Note: as standard on serverless functions, state is maintained per function instance and resets when the function instance is recycled.
 
 ## AI Model Selection
-- **Decision**: Default model configured as `claude-3-5-haiku-20241022`.
-- **Rationale**: Fast, economical, and highly accurate at structured JSON extraction.
+- **Decision**: Default model is `claude-haiku-5-5` (the current small Claude model), configurable in `scraper.ai.model`.
+- **Rationale**: Extraction is a single structured-output call on short text, so the small, fast model fits both cost and the request time budget. The call uses `output_config.effort: "low"` to keep latency down.
 
 ## HTML Sanitization
-- **Decision**: Use `sanitize-html` with an allowlist permitting standard formatting tags (`p`, `br`, `b`, `i`, `strong`, `em`, `ul`, `ol`, `li`, `h1`-`h6`, `blockquote`, `code`, `pre`, `a[href]`) and stripping script, style, inline event handlers, and dangerous protocols.
+- **Decision**: Use `sanitize-html` with an allowlist permitting standard formatting tags (`p`, `div`, `br`, `b`, `i`, `strong`, `em`, `ul`, `ol`, `li`, `h1`-`h6`, `blockquote`, `code`, `pre`, `a[href]`) and stripping script, style, inline event handlers, and dangerous protocols.
 
 ## Deno 2 and Netlify Dev Compatibility
 - **Decision**: Disable `edgeFunctions` dev emulation in `@astrojs/netlify` adapter configuration and automatically remove the `--allow-scripts` flag in `scripts/patch-deno.js` via `npm postinstall`.
@@ -72,3 +72,34 @@
 - **Decision**: Import always runs a server-side plan first (validation, id remapping, create/update counts). The Settings page shows that dry-run summary before committing. The commit re-plans and applies everything atomically: one Neon HTTP `batch` (a single transaction), or `db.transaction` on other drivers.
 - **Decision**: Export/import functions take the database as a parameter. Integration tests run them against PGlite (in-memory Postgres) with the committed migrations: round trip into an empty database, idempotent re-import, merging, and rollback on failure.
 - **Note**: The import body is sent to a serverless function. Very large exports may exceed Netlify's function request size limit; check the current limit in the Netlify docs if that happens.
+
+## Extraction Time Budget and AI Follow-up
+- **Decision**: One extraction request has a wall-clock budget, `scraper.requestBudgetMs` (default 9000). The page fetch gets at most `fetchTimeoutMs` and always leaves time for the ATS APIs. AI runs only if at least 4s of the budget remain. Otherwise the response sets `aiPending: true`, and the review form calls `POST /api/extract/ai` with the text and fields it already has, so the page isn't fetched twice.
+- **Rationale**: Netlify's docs pages I could reach (Oct 2026) don't state the synchronous function limit. Netlify staff on the support forum describe a 10s default, raisable to 26s on request. With a higher limit, raise `requestBudgetMs` and AI will usually run in the first request.
+- **Decision**: "Re-run with AI" calls `POST /api/extract?force=ai` (spec). When the text is already in the form, it goes straight to `/api/extract/ai` with `force: true`, again to avoid a refetch. Fields the user edited are never overwritten.
+
+## ATS Extractors (verified against live public APIs, 2026-10-21)
+- **Greenhouse**: `GET boards-api.greenhouse.io/v1/boards/{token}/jobs/{id}?pay_transparency=true`. Handles `boards.greenhouse.io` and `job-boards.greenhouse.io` URLs, `embed/job_app?for=&token=`, and company pages with `?gh_jid=` plus a Greenhouse embed script naming the board. `content` arrives HTML-entity-encoded and is decoded with the `entities` package. `pay_input_ranges` have no period, so it's inferred from the range's title/blurb and then from the amount's size. EU-hosted boards (`job-boards.eu.greenhouse.io`) aren't mapped to an API host and fall through to JSON-LD/heuristic.
+- **Lever**: `GET api.lever.co/v0/postings/{site}/{id}` (`api.eu.lever.co` for EU postings). The description is assembled from `description`, each `lists[]` entry as a heading plus list, and `additional`. `salaryRange.interval` is like `per-year-salary`; one-time and weekly amounts are ignored.
+- **Ashby**: there's no single-posting endpoint, so the board (`posting-api/job-board/{board}?includeCompensation=true`) is fetched and the job matched by `id`. Salary is the `Salary` summary component (`interval` like `1 YEAR`).
+- **Company names**: neither the Lever nor the Ashby API returns one. The hosted pages' JSON-LD usually does. If nothing does, the URL slug is title-cased as a fallback, labeled "(check this)" in the review form, with a warning.
+
+## Extraction Merge Rules
+- **Decision**: Fields are taken from the first extractor in `scraper.order` that returns a valid value, and each field is validated on its own (an invalid value is dropped with a warning). Skills are the union of every extractor's skills plus config skills found in the final description, normalized to canonical names via config aliases. Skill aliases of one or two characters (`ts`, `Go`) match only as written in config or in all caps.
+- **Decision**: In `fillGapsOnly` mode, AI runs when title, company or description, salary, or skills are still missing.
+
+## Salary Parser
+- **Decision**: `src/lib/extract/salary.ts` reads ranges and single values with a currency symbol or code before or after, `k` suffixes (a trailing `k` applies to both ends: "$120-150k"), and period words. A number counts only with a currency marker or a salary keyword nearby. It skips 401k, numbers followed by million/billion or headcount words, implausible amounts for the period, and ranges whose top is more than 5× the bottom. When several candidates exist, the one with a currency, a keyword and a range wins. With no period words, amounts under 300 are hourly and larger ones yearly.
+
+## SSRF Protection
+- **Decision**: User-supplied URLs are fetched with `node:http(s)` and a custom DNS `lookup` that rejects hostnames resolving to any loopback, private, link-local, CGNAT, multicast, unique-local, NAT64 or IPv4-mapped-private address. The check happens inside the socket's lookup, so the connection uses exactly the address that was checked, with no DNS-rebinding window. Connection pooling is disabled (`agent: false`) so every connection goes through the check. Literal IPs, `localhost`/`.local`/`.internal`, non-http(s) schemes and URLs with credentials are rejected up front. Redirects are followed manually (max 5) and every hop is re-validated. Responses are capped at 2 MB for pages and 8 MB for ATS JSON.
+
+## Duplicate URLs
+- **Decision**: Posting URLs are normalized on save and on lookup: fragment removed, tracking parameters (`utm_*`, `gh_src`, `lever-source`, …) removed, host lowercased, trailing slash removed. Existing rows aren't rewritten; the lookup also matches the raw and trailing-slash spellings. `/api/extract` reports a duplicate up front, and saving one still redirects to the existing job.
+
+## AI Extractor
+- **Decision**: `@anthropic-ai/sdk` `messages.parse` with a Zod structured-output schema in which every field is required but nullable, so the model must answer null rather than guess. `output_config.effort: "low"`, `maxRetries: 0`, and a timeout equal to the remaining budget. The system prompt tells the model to treat the posting as untrusted data and ignore instructions in it. Each returned field is re-validated and invalid ones are dropped with a warning. Refusals, truncation, auth errors, rate limits and timeouts become warnings; Claude Haiku has no server-side refusal fallback.
+- **Decision**: The AI step only ever sees readable text (the extracted description, the pasted text, or the page's text), truncated to `scraper.ai.maxInputChars`. It never receives HTML.
+
+## Review Form Provenance
+- **Decision**: The add-job form saves `fieldSources` for every field with a value. A field the user edits is recorded as `manual`. `source` is the extractor that supplied the most fields. `scraped_at` is set when anything came from extraction. Editing the description text drops the extracted HTML so the saved text and HTML can't disagree.

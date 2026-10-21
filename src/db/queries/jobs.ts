@@ -5,6 +5,7 @@ import type { CreateJobInput, UpdateJobInput } from '../../lib/validation/job';
 import { INTERVIEW_EVENT_TYPES } from '../../lib/validation/event';
 import { todayInTz } from '../../lib/dates';
 import { prepareDescription } from '../../lib/highlights/html';
+import { normalizeJobUrl } from '../../lib/extract/url';
 
 const stageLabel = (id: string) => config.pipeline.stages.find((s) => s.id === id)?.label ?? id;
 
@@ -14,18 +15,13 @@ export class NotFoundError extends Error {
 
 export async function createJob(input: CreateJobInput) {
   // 1. Check duplicate URL
-  const cleanUrl = input.url?.trim() || null;
+  const cleanUrl = input.url?.trim() ? normalizeJobUrl(input.url) : null;
   if (cleanUrl) {
-    const existing = await db
-      .select({ id: schema.jobs.id, title: schema.jobs.title, company: schema.jobs.company })
-      .from(schema.jobs)
-      .where(eq(schema.jobs.url, cleanUrl))
-      .limit(1);
-
-    if (existing.length > 0) {
+    const existing = await findJobByUrl(cleanUrl);
+    if (existing) {
       const err: any = new Error(`Job already exists for URL: ${cleanUrl}`);
       err.code = 'DUPLICATE_URL';
-      err.existingJob = existing[0];
+      err.existingJob = existing;
       throw err;
     }
   }
@@ -56,6 +52,7 @@ export async function createJob(input: CreateJobInput) {
       ...prepareDescription({ html: input.descriptionHtml, text: input.descriptionText }),
       source: input.source || 'manual',
       fieldSources: input.fieldSources || null,
+      scrapedAt: input.source && input.source !== 'manual' ? now : null,
       status: input.status || 'saved',
       priority: input.priority ?? 1,
       boardOrder: nextBoardOrder,
@@ -119,6 +116,21 @@ export async function createJob(input: CreateJobInput) {
   });
 
   return newJob;
+}
+
+/**
+ * Finds a job by posting URL. Matches the normalized form and the raw spellings stored
+ * before normalization existed (with/without trailing slash).
+ */
+export async function findJobByUrl(rawUrl: string) {
+  const normalized = normalizeJobUrl(rawUrl);
+  const variants = [...new Set([rawUrl.trim(), normalized, `${normalized}/`])];
+  const rows = await db
+    .select({ id: schema.jobs.id, title: schema.jobs.title, company: schema.jobs.company })
+    .from(schema.jobs)
+    .where(inArray(schema.jobs.url, variants))
+    .limit(1);
+  return rows[0] ?? null;
 }
 
 export async function getJobById(id: string) {
@@ -276,7 +288,7 @@ export async function updateJob(id: string, input: UpdateJobInput) {
   if (input.salaryMax !== undefined) updateValues.salaryMax = input.salaryMax;
   if (input.salaryCurrency !== undefined) updateValues.salaryCurrency = input.salaryCurrency;
   if (input.salaryPeriod !== undefined) updateValues.salaryPeriod = input.salaryPeriod;
-  if (input.url !== undefined) updateValues.url = input.url?.trim() || null;
+  if (input.url !== undefined) updateValues.url = input.url?.trim() ? normalizeJobUrl(input.url) : null;
   if (input.descriptionHtml !== undefined) {
     Object.assign(updateValues, prepareDescription({ html: input.descriptionHtml }));
   } else if (input.descriptionText !== undefined && (input.descriptionText || null) !== existing.descriptionText) {

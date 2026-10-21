@@ -5,6 +5,20 @@ import { computeMatchScore } from '../../../lib/skills/match';
 import { parseSort, sortJobs } from '../../../lib/jobs/sort';
 import config from '../../../config';
 
+/** The add-job form sends per-field provenance as a JSON string; ignore anything malformed. */
+function parseFieldSources(raw: FormDataEntryValue | null): Record<string, string> | undefined {
+  if (typeof raw !== 'string' || !raw) return undefined;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return undefined;
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(parsed)) if (typeof v === 'string' && k.length < 40 && v.length < 40) out[k] = v;
+    return Object.keys(out).length ? out : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export const GET: APIRoute = async ({ url }) => {
   try {
     const status = url.searchParams.get('status') || undefined;
@@ -80,6 +94,8 @@ export const POST: APIRoute = async ({ request, redirect }) => {
       priority: formData.get('priority') || 1,
       nextAction: formData.get('nextAction') || undefined,
       nextActionDate: formData.get('nextActionDate') || undefined,
+      source: formData.get('source') || 'manual',
+      fieldSources: parseFieldSources(formData.get('fieldSources')),
       skills: skillsRaw
         ? skillsRaw
             .split(',')

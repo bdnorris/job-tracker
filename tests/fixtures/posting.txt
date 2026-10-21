@@ -1,0 +1,11 @@
+Backend Developer at Sample Robotics
+Location: Pittsburgh, PA (Hybrid)
+
+About the job
+Sample Robotics builds warehouse automation. You'll write services in TypeScript and work closely with our hardware team.
+
+Requirements
+- 4+ years building APIs
+- Experience with JavaScript and PostgreSQL
+
+Pay: $110k - $135k annually

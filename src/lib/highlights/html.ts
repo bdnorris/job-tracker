@@ -5,7 +5,9 @@ import { walkText } from './walk';
 /** Allowlist for stored description HTML (see docs/decisions.md). */
 const DESCRIPTION_SANITIZE: sanitizeHtml.IOptions = {
   allowedTags: [
-    'p', 'br', 'b', 'i', 'strong', 'em', 'u', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+    // div is kept (as a plain block) because ATS markup like Lever's uses it for paragraphs;
+    // stripping it would run separate blocks together.
+    'p', 'div', 'br', 'b', 'i', 'strong', 'em', 'u', 'ul', 'ol', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
     'blockquote', 'code', 'pre', 'a', 'hr',
   ],
   allowedAttributes: { a: ['href', 'rel', 'target'] },
