@@ -75,7 +75,7 @@ describe('renderHighlightedHtml', () => {
 
   it('wraps a simple range', () => {
     const r = renderHighlightedHtml(html, [hl('a', text, 'TypeScript')]);
-    expect(r.html).toContain('<mark class="hl hl-requirement" data-id="a">TypeScript</mark>');
+    expect(r.html).toContain('<mark class="hl hl-requirement" data-id="a" id="hl-a">TypeScript</mark>');
     expect(r.orphaned).toHaveLength(0);
   });
 
@@ -93,7 +93,7 @@ describe('renderHighlightedHtml', () => {
   it('nests overlapping ranges with the shortest innermost', () => {
     const r = renderHighlightedHtml(html, [hl('long', text, '5+ years', 'nice'), hl('short', text, 'years', 'redflag')]);
     expect(r.html).toContain(
-      '<mark class="hl hl-nice" data-id="long">5+ </mark><mark class="hl hl-nice" data-id="long"><mark class="hl hl-redflag" data-id="short">years</mark></mark>'
+      '<mark class="hl hl-nice" data-id="long" id="hl-long">5+ </mark><mark class="hl hl-nice" data-id="long"><mark class="hl hl-redflag" data-id="short" id="hl-short">years</mark></mark>'
     );
   });
 

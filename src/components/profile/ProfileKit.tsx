@@ -45,7 +45,16 @@ export default function ProfileKit({ sections, items: initialItems }: Props) {
   useEffect(() => {
     if (!pendingFocus) return;
     const el = document.querySelector<HTMLElement>(`[data-focus="${pendingFocus}"]`);
+    // Moving an item to the top or bottom disables the button that was used; focus its
+    // opposite instead so keyboard focus isn't lost.
+    const opposite = pendingFocus.endsWith('-up')
+      ? pendingFocus.replace(/-up$/, '-down')
+      : pendingFocus.endsWith('-down')
+        ? pendingFocus.replace(/-down$/, '-up')
+        : null;
+    const fallback = opposite ? document.querySelector<HTMLElement>(`[data-focus="${opposite}"]`) : null;
     if (el && !(el as HTMLButtonElement).disabled) el.focus();
+    else if (fallback && !(fallback as HTMLButtonElement).disabled) fallback.focus();
     setPendingFocus(null);
   }, [pendingFocus]);
 

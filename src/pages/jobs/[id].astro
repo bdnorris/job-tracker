@@ -3,6 +3,7 @@ import Layout from '../../layouts/Layout.astro';
 import config from '../../config';
 import { getJobById } from '../../db/queries/jobs';
 import Timeline from '../../components/Timeline.astro';
+import Highlighter from '../../components/Highlighter';
 import { formatSalary, REMOTE_LABELS } from '../../lib/format';
 import { formatDate, todayInTz } from '../../lib/dates';
 import { renderDescription } from '../../lib/highlights/html';
@@ -122,35 +123,47 @@ const stageLabel = currentStage ? currentStage.label : job.status;
       </div>
     </header>
 
-    <div class="job-grid">
-      <!-- Main Content: Description -->
+    {description.html ? (
+      <Highlighter
+        client:load
+        jobId={job.id}
+        initialHtml={description.html}
+        baseHtml={description.baseHtml}
+        text={description.text}
+        highlights={job.highlights.map((h) => ({
+          id: h.id,
+          startOffset: h.startOffset,
+          endOffset: h.endOffset,
+          quote: h.quote,
+          prefix: h.prefix,
+          suffix: h.suffix,
+          category: h.category,
+          note: h.note,
+        }))}
+        orphanIds={description.orphaned.map((h) => h.id)}
+        categories={config.highlights.categories}
+      />
+    ) : (
       <section class="card content-section">
         <h2>Job Description</h2>
-        {description.html ? (
-          <div class="description-body" set:html={description.html} />
+        <p class="empty-state">No description yet. <a href={`/jobs/${job.id}/edit`}>Add one</a> to start highlighting.</p>
+      </section>
+    )}
+
+    <div class="detail-lower">
+      <Timeline jobId={job.id} events={job.events} error={eventError} />
+      <section class="card sidebar-card" aria-labelledby="skills-heading">
+        <h2 id="skills-heading" class="skills-heading">Skills</h2>
+        {job.skills && job.skills.length > 0 ? (
+          <div class="skills-tags">
+            {job.skills.map((s) => (
+              <span class="badge skill-badge">{s.name}</span>
+            ))}
+          </div>
         ) : (
-          <p class="empty-state">No description provided.</p>
+          <p class="empty-state">No skills attached.</p>
         )}
       </section>
-
-      <!-- Sidebar: Skills & Timeline -->
-      <aside class="sidebar-section">
-        <!-- Skills -->
-        <div class="card sidebar-card">
-          <h3>Skills</h3>
-          {job.skills && job.skills.length > 0 ? (
-            <div class="skills-tags">
-              {job.skills.map((s) => (
-                <span class="badge skill-badge">{s.name}</span>
-              ))}
-            </div>
-          ) : (
-            <p class="empty-state">No skills attached.</p>
-          )}
-        </div>
-
-        <Timeline jobId={job.id} events={job.events} error={eventError} />
-      </aside>
     </div>
   </div>
 
@@ -341,40 +354,19 @@ const stageLabel = currentStage ? currentStage.label : job.status;
     padding: 0.25rem 0.5rem;
     border-radius: var(--radius-sm);
   }
-  .job-grid {
+  .detail-lower {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
     gap: 1.5rem;
+    align-items: start;
+  }
+  .skills-heading {
+    font-size: 1.125rem;
   }
   .content-section {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-  }
-  .description-body {
-    line-height: 1.6;
-    color: var(--text-secondary);
-  }
-  .description-body > :global(* + *) {
-    margin-top: 0.75rem;
-  }
-  .description-body :global(h1),
-  .description-body :global(h2),
-  .description-body :global(h3),
-  .description-body :global(h4) {
-    border: none;
-    padding: 0;
-    margin-bottom: 0;
-  }
-  .description-body :global(ul),
-  .description-body :global(ol) {
-    padding-left: 1.4rem;
-  }
-  .description-body :global(h1),
-  .description-body :global(h2),
-  .description-body :global(h3) {
-    font-size: 1rem;
-    color: var(--text-primary);
   }
   .sidebar-section {
     display: flex;
@@ -400,8 +392,8 @@ const stageLabel = currentStage ? currentStage.label : job.status;
     font-size: 0.875rem;
   }
   @media (max-width: 768px) {
-    .job-grid {
-      grid-template-columns: 1fr;
+    .detail-lower {
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 </style>

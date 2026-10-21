@@ -6,6 +6,7 @@ import { INTERVIEW_EVENT_TYPES } from '../../lib/validation/event';
 import { todayInTz } from '../../lib/dates';
 import { prepareDescription } from '../../lib/highlights/html';
 import { normalizeJobUrl } from '../../lib/extract/url';
+import { reanchorJobHighlights } from './highlights';
 
 const stageLabel = (id: string) => config.pipeline.stages.find((s) => s.id === id)?.label ?? id;
 
@@ -331,6 +332,11 @@ export async function updateJob(id: string, input: UpdateJobInput) {
     .set(updateValues)
     .where(eq(schema.jobs.id, id))
     .returning();
+
+  // A changed description moves or orphans highlights (spec: Highlighter > Re-anchoring).
+  if ('descriptionText' in updateValues && updateValues.descriptionText !== existing.descriptionText) {
+    await reanchorJobHighlights(id, updateValues.descriptionText ?? null);
+  }
 
   // If skills list provided, update job_skills
   if (input.skills !== undefined) {

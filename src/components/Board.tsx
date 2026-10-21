@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'preact/hooks';
+import { useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { Fragment, type JSX } from 'preact';
 import { orderForIndex } from '../lib/board/order';
 import './Board.css';
@@ -47,6 +47,15 @@ export default function Board({ stages, jobs: initialJobs }: Props) {
   const [announcement, setAnnouncement] = useState('');
   const [pending, setPending] = useState<Set<string>>(new Set());
   const columnRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  // A keyboard status change moves the card to another column, which re-creates its select;
+  // focus is put back on the new one.
+  const [focusSelectFor, setFocusSelectFor] = useState<string | null>(null);
+
+  useLayoutEffect(() => {
+    if (!focusSelectFor) return;
+    document.getElementById(`status-${focusSelectFor}`)?.focus();
+    setFocusSelectFor(null);
+  }, [focusSelectFor, jobs]);
 
   const stageLabel = (id: string) => stages.find((s) => s.id === id)?.label ?? id;
   const openStages = stages.filter((s) => !s.closed);
@@ -152,7 +161,8 @@ export default function Board({ stages, jobs: initialJobs }: Props) {
   }
 
   function onStatusSelect(job: BoardJob, status: string) {
-    if (status === job.status) return;
+    if (status === job.status || pending.has(job.id)) return;
+    setFocusSelectFor(job.id);
     // Keyboard/select moves append to the end of the target column.
     moveJob(job.id, status, (columns[status] ?? []).length);
   }
@@ -217,7 +227,8 @@ export default function Board({ stages, jobs: initialJobs }: Props) {
             id={selectId}
             class="select select-sm"
             value={job.status}
-            disabled={pending.has(job.id)}
+            // aria-disabled, not disabled: disabling the focused select would drop focus to <body>.
+            aria-disabled={pending.has(job.id) || undefined}
             onChange={(e) => onStatusSelect(job, (e.currentTarget as HTMLSelectElement).value)}
           >
             {stages.map((s) => (

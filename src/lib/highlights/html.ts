@@ -1,6 +1,7 @@
 import { parseHTML } from 'linkedom';
 import sanitizeHtml from 'sanitize-html';
 import { walkText } from './walk';
+import { applyHighlights, type RenderableHighlight } from './marks';
 
 /** Allowlist for stored description HTML (see docs/decisions.md). */
 const DESCRIPTION_SANITIZE: sanitizeHtml.IOptions = {
@@ -64,75 +65,15 @@ export function prepareDescription(input: { html?: string | null; text?: string 
   return { descriptionHtml: html, descriptionText: htmlToText(html) };
 }
 
-export interface RenderableHighlight {
-  id: string;
-  startOffset: number;
-  endOffset: number;
-  quote: string;
-  category: string;
-}
+export type { RenderableHighlight } from './marks';
 
 /**
- * Wraps highlight ranges in `<mark class="hl hl-<category>" data-id>` elements. Ranges are
- * split at element boundaries, and overlapping ranges nest with the longest outermost so the
- * shortest (innermost) range's color shows. Highlights whose quote no longer matches the
- * text at their offsets are returned as `orphaned` and not rendered.
+ * Wraps highlight ranges in marks (see applyHighlights). Highlights whose quote no longer
+ * matches the text at their offsets are returned as `orphaned` and not rendered.
  */
-export function renderHighlightedHtml(html: string, highlights: RenderableHighlight[]) {
-  const { document, root } = parseFragment(html);
-  const { text, segments } = walkText(root);
-
-  const valid: RenderableHighlight[] = [];
-  const orphaned: RenderableHighlight[] = [];
-  for (const h of highlights) {
-    const ok = h.startOffset >= 0 && h.endOffset > h.startOffset && text.slice(h.startOffset, h.endOffset) === h.quote;
-    (ok ? valid : orphaned).push(h);
-  }
-
-  // Normalize text nodes so the rendered DOM walks to exactly the same text.
-  for (const seg of segments) seg.node.data = seg.text;
-
-  if (valid.length > 0) {
-    const outerFirst = (a: RenderableHighlight, b: RenderableHighlight) =>
-      b.endOffset - b.startOffset - (a.endOffset - a.startOffset) || a.startOffset - b.startOffset || a.id.localeCompare(b.id);
-
-    for (const seg of segments) {
-      const segStart = seg.start;
-      const segEnd = seg.start + seg.text.length;
-      if (segEnd === segStart) continue;
-
-      const overlapping = valid.filter((h) => h.startOffset < segEnd && h.endOffset > segStart);
-      if (overlapping.length === 0) continue;
-
-      const cuts = new Set<number>([0, seg.text.length]);
-      for (const h of overlapping) {
-        cuts.add(Math.max(0, h.startOffset - segStart));
-        cuts.add(Math.min(seg.text.length, h.endOffset - segStart));
-      }
-      const points = [...cuts].sort((a, b) => a - b);
-
-      const fragment = document.createDocumentFragment();
-      for (let i = 0; i < points.length - 1; i++) {
-        const a = points[i];
-        const b = points[i + 1];
-        let node: Node = document.createTextNode(seg.text.slice(a, b));
-        const covering = overlapping
-          .filter((h) => h.startOffset <= segStart + a && h.endOffset >= segStart + b)
-          .sort(outerFirst);
-        for (let j = covering.length - 1; j >= 0; j--) {
-          const mark = document.createElement('mark');
-          // linkedom serializes attributes in reverse insertion order.
-          mark.setAttribute('data-id', covering[j].id);
-          mark.setAttribute('class', `hl hl-${covering[j].category}`);
-          mark.appendChild(node);
-          node = mark;
-        }
-        fragment.appendChild(node);
-      }
-      seg.node.parentNode!.replaceChild(fragment, seg.node);
-    }
-  }
-
+export function renderHighlightedHtml<H extends RenderableHighlight>(html: string, highlights: H[]) {
+  const { root } = parseFragment(html);
+  const { text, orphaned } = applyHighlights(root, highlights);
   return { html: root.innerHTML, text, orphaned };
 }
 
@@ -140,13 +81,16 @@ export function renderHighlightedHtml(html: string, highlights: RenderableHighli
  * Description HTML for display: stored HTML is re-sanitized on output (rows written before
  * sanitize-on-save existed), and plain-text-only rows are converted.
  */
-export function renderDescription(
+export function renderDescription<H extends RenderableHighlight>(
   job: { descriptionHtml: string | null; descriptionText: string | null },
-  highlights: RenderableHighlight[] = []
+  highlights: H[] = []
 ) {
   const html = job.descriptionHtml?.trim()
     ? sanitizeDescriptionHtml(job.descriptionHtml)
     : textToHtml(job.descriptionText ?? '');
-  if (!html) return { html: '', text: '', orphaned: highlights };
-  return renderHighlightedHtml(html, highlights);
+  if (!html) return { html: '', baseHtml: '', text: '', orphaned: highlights };
+  const base = renderHighlightedHtml(html, [] as H[]);
+  const marked = highlights.length ? renderHighlightedHtml(html, highlights) : base;
+  // baseHtml: normalized, without marks, for the client highlighter to re-render from.
+  return { html: marked.html, baseHtml: base.html, text: marked.text, orphaned: marked.orphaned };
 }

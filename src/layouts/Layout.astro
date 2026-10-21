@@ -15,7 +15,11 @@ const currentPath = Astro.url.pathname;
 const printClass = config.print.showUrls ? 'show-urls' : '';
 
 // Category ids are validated as CSS-safe and colors as hex in the config schema.
-const highlightCss = config.highlights.categories.map((c) => `.hl-${c.id}{--hl-bg:${c.color}}`).join('');
+// `.hl-hide-<id>` on a container hides that category's marks (the highlighter's filter toggles);
+// a hidden inner mark lets an enclosing highlight's color show through.
+const highlightCss = config.highlights.categories
+  .map((c) => `.hl-${c.id}{--hl-bg:${c.color}}.hl-hide-${c.id} mark.hl-${c.id}{--hl-bg:transparent}`)
+  .join('');
 ---
 
 <!doctype html>
