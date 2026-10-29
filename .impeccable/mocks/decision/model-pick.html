@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Job Tracker - Board (T-Card Planning Rack)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--steel:#3d4650;--steel-d:#2b3239;--steel-l:#56616c;--buff:#e9e4d6;--buff-d:#d6cfbb;--ink:#1b1f24;--mute:#5d6166;--yel:#f2c94c;--red:#d9534f;--page:#d9d5c8}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1440px;height:900px;overflow:hidden}
+body{background:var(--page);color:var(--ink);font:400 13px/1.35 'Barlow',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.hdr{height:48px;background:var(--steel);display:flex;align-items:center;padding:0 24px;border-bottom:3px solid var(--yel)}
+.brand{font:700 20px 'Barlow Condensed',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--buff);margin-right:auto}
+.brand b{color:var(--yel);font-weight:700}
+nav{display:flex;gap:4px}
+nav a{color:#c9ced3;text-decoration:none;font:500 14px 'Barlow',sans-serif;padding:6px 12px;border-radius:2px}
+nav a:hover{background:var(--steel-l);color:#fff}
+nav a.on{background:var(--buff);color:var(--ink);font-weight:600}
+nav a.add{border:1px solid var(--yel);color:var(--yel)}
+nav a.out{margin-left:12px}
+main{padding:14px 24px 0}
+.dash{display:grid;grid-template-columns:372px 190px 1fr 1fr;gap:12px;height:152px}
+.panel{background:var(--buff);border:1px solid var(--buff-d);border-top:3px solid var(--steel);padding:8px 12px;min-width:0}
+h2{font:600 13px 'Barlow Condensed',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--steel);margin-bottom:6px}
+.counts{display:grid;grid-template-columns:repeat(6,1fr);gap:6px}
+.cnt{background:var(--steel);color:var(--buff);padding:6px 6px 5px;text-align:center}
+.cnt b{display:block;font:700 30px/1 'Barlow Condensed',sans-serif}
+.cnt span{font:600 10.5px 'Barlow Condensed',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#d3d8dd}
+.cnt.hot{box-shadow:inset 0 -3px var(--yel)}
+.rate{display:flex;flex-direction:column;gap:8px}
+.rate div{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px dotted var(--mute);padding-bottom:4px}
+.rate b{font:700 26px/1 'Barlow Condensed',sans-serif}
+.rate span{font-size:12px;color:var(--mute)}
+ul{list-style:none}
+li{display:flex;gap:8px;align-items:baseline;padding:4px 0;border-bottom:1px dotted #b9b29c;font-size:12.5px}
+li:last-child{border:0}
+li .d{font:600 12px 'Barlow Condensed',sans-serif;letter-spacing:.06em;text-transform:uppercase;min-width:52px;text-align:center;padding:1px 4px;background:var(--buff-d)}
+li .d.today{background:var(--yel)}li .d.od{background:var(--red);color:var(--ink);font-weight:700}
+li em{font-style:normal;color:var(--mute);margin-left:auto;white-space:nowrap}
+.rack{margin-top:14px;display:grid;grid-template-columns:repeat(5,1fr) 60px;gap:8px;height:594px}
+.chan{background:var(--steel);border-left:2px solid var(--steel-d);border-right:2px solid var(--steel-d);padding:0 8px 8px;position:relative;
+background-image:repeating-linear-gradient(to bottom,transparent 0 33px,rgba(0,0,0,.18) 33px 35px)}
+.chan header{display:flex;justify-content:space-between;align-items:baseline;padding:9px 2px 8px;background:var(--steel);margin:0 -8px 8px;padding-left:10px;padding-right:10px;border-bottom:2px solid var(--steel-d)}
+.chan h3{font:700 17px 'Barlow Condensed',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--buff)}
+.chan header span{font:600 14px 'Barlow Condensed',sans-serif;color:var(--ink);background:var(--yel);min-width:22px;text-align:center;padding:0 5px}
+.card{background:var(--buff);box-shadow:0 2px 0 rgba(0,0,0,.35);border-radius:2px;position:relative;margin-bottom:-4px}
+.tab{background:var(--buff-d);border-bottom:2px solid var(--ink);padding:7px 28px 6px 10px;border-radius:2px 2px 0 0;position:relative}
+.tab h4{font:700 17px/1.1 'Barlow Condensed',sans-serif;letter-spacing:.02em;text-transform:uppercase}
+.tab p{font:500 12.5px 'Barlow',sans-serif;color:#3a3f45;margin-top:1px}
+.flag{position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 24px 24px 0;border-color:transparent var(--c,var(--steel-l)) transparent transparent}
+.body{padding:8px 10px 10px;display:grid;gap:6px}
+.row{display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.sal{font:700 15px 'Barlow Condensed',sans-serif;letter-spacing:.03em}
+.pct{font:700 20px/1 'Barlow Condensed',sans-serif}.pct small{font-size:12px}
+.meta{font-size:12px;color:var(--mute)}
+.sk{display:flex;gap:4px;flex-wrap:wrap}
+.sk i{font:500 11.5px 'Barlow',sans-serif;font-style:normal;border:1px solid var(--ink);padding:0 5px;background:#f3efe3}
+.next{border-top:1px dashed #9d977f;padding-top:6px;font-size:12.5px}
+.next b{display:block;font-weight:600}
+.next span{font:600 12px 'Barlow Condensed',sans-serif;letter-spacing:.08em;text-transform:uppercase}
+.next.od span,.next.od b{color:#a92f2b}.next.od{border-top:2px solid var(--red)}
+.next.od span{font-weight:700}
+.next.today span{background:var(--yel);padding:0 4px}
+select{font:500 12.5px 'Barlow',sans-serif;color:var(--ink);background:#f6f3e9;border:1px solid var(--ink);border-radius:2px;padding:4px 6px;width:100%;margin-top:2px}
+select:focus-visible,nav a:focus-visible{outline:2px solid var(--yel);outline-offset:2px}
+.closed{background:var(--steel-d);color:var(--buff);display:flex;flex-direction:column;align-items:center;padding-top:10px;gap:14px;border:0;cursor:pointer;font-family:inherit}
+.closed span{writing-mode:vertical-rl;font:700 17px 'Barlow Condensed',sans-serif;letter-spacing:.14em;text-transform:uppercase}
+.closed b{font:700 14px 'Barlow Condensed',sans-serif;background:var(--buff);color:var(--ink);min-width:22px;padding:0 5px}
+.closed::before{content:"\25B8";color:var(--yel);font-size:14px}
+</style></head><body>
+<div class="hdr"><div class="brand">Job <b>Tracker</b></div>
+<nav><a class="on" href="#" aria-current="page">Board</a><a href="#">List</a><a class="add" href="#">+ Add Job</a><a href="#">App Kit</a><a href="#">Settings</a><a class="out" href="#">Sign Out</a></nav></div>
+<main>
+<section class="dash">
+ <div class="panel"><h2>Pipeline</h2>
+  <div class="counts"><div class="cnt"><b>1</b><span>Saved</span></div><div class="cnt"><b>1</b><span>Applied</span></div><div class="cnt"><b>1</b><span>Screening</span></div><div class="cnt"><b>1</b><span>Interview</span></div><div class="cnt hot"><b>1</b><span>Offer</span></div><div class="cnt"><b>2</b><span>Closed</span></div></div>
+  <p class="meta" style="margin-top:8px">Wed Oct 28, 2026 &middot; 5 open, 2 closed</p></div>
+ <div class="panel"><h2>Applications</h2><div class="rate"><div><span>Applied, 7 days</span><b>2</b></div><div><span>Applied, 30 days</span><b>5</b></div></div></div>
+ <div class="panel"><h2>Next actions due</h2><ul>
+  <li><span class="d od">Oct 27</span>Review offer letter and benefits<em>Apex Analytics</em></li>
+  <li><span class="d today">Today</span>Recruiter phone screen<em>Starlight Robotics</em></li>
+  <li><span class="d">Oct 29</span>Tailor resume for posting<em>Initech Labs</em></li></ul></div>
+ <div class="panel"><h2>Upcoming interviews</h2><ul>
+  <li><span class="d">Thu 30</span>System Design panel<em>Acme Cloud Systems &middot; 2:00pm</em></li></ul></div>
+</section>
+<section class="rack" aria-label="Board">
+ <div class="chan"><header><h3>Saved</h3><span>1</span></header>
+  <article class="card"><div class="tab"><i class="flag"></i><h4>Backend Services Engineer</h4><p>Initech Labs</p></div><div class="body">
+   <div class="row"><span class="sal">$115k&ndash;$140k</span><span class="pct">78<small>%</small></span></div><div class="meta">Remote</div>
+   <div class="sk"><i>TypeScript</i><i>JavaScript</i><i>Astro</i></div>
+   <div class="next"><span>Tomorrow &middot; Oct 29</span><b>Tailor resume for posting</b></div>
+   <select aria-label="Status"><option selected>Saved</option><option>Applied</option><option>Screening</option><option>Interviewing</option><option>Offer</option><option>Closed</option></select></div></article></div>
+ <div class="chan"><header><h3>Applied</h3><span>1</span></header>
+  <article class="card"><div class="tab"><i class="flag"></i><h4>UI Platform Engineer</h4><p>Globex Software</p></div><div class="body">
+   <div class="row"><span class="sal">$130k&ndash;$160k</span><span class="pct">84<small>%</small></span></div><div class="meta">Onsite, New York</div>
+   <div class="sk"><i>React</i><i>TypeScript</i><i>JavaScript</i></div>
+   <div class="next"><span>Nov 1</span><b>Follow up if no reply</b></div>
+   <select aria-label="Status"><option>Saved</option><option selected>Applied</option><option>Screening</option><option>Interviewing</option><option>Offer</option><option>Closed</option></select></div></article></div>
+ <div class="chan"><header><h3>Screening</h3><span>1</span></header>
+  <article class="card"><div class="tab"><i class="flag" style="--c:var(--yel)"></i><h4>Full Stack Developer</h4><p>Starlight Robotics</p></div><div class="body">
+   <div class="row"><span class="sal">$125k&ndash;$150k</span><span class="pct">81<small>%</small></span></div><div class="meta">Hybrid, Chicago</div>
+   <div class="sk"><i>React</i><i>TypeScript</i><i>Astro</i></div>
+   <div class="next today"><span>Today</span><b>Recruiter phone screen</b></div>
+   <select aria-label="Status"><option>Saved</option><option>Applied</option><option selected>Screening</option><option>Interviewing</option><option>Offer</option><option>Closed</option></select></div></article></div>
+ <div class="chan"><header><h3>Interviewing</h3><span>1</span></header>
+  <article class="card"><div class="tab"><i class="flag" style="--c:var(--yel)"></i><h4>Senior Frontend Engineer</h4><p>Acme Cloud Systems</p></div><div class="body">
+   <div class="row"><span class="sal">$140k&ndash;$175k</span><span class="pct">92<small>%</small></span></div><div class="meta">Remote</div>
+   <div class="sk"><i>React</i><i>TypeScript</i><i>Astro</i></div>
+   <div class="next"><span>Oct 30</span><b>Prep for System Design panel</b></div>
+   <select aria-label="Status"><option>Saved</option><option>Applied</option><option>Screening</option><option selected>Interviewing</option><option>Offer</option><option>Closed</option></select></div></article></div>
+ <div class="chan"><header><h3>Offer</h3><span>1</span></header>
+  <article class="card"><div class="tab"><i class="flag" style="--c:var(--red)"></i><h4>Staff Software Architect</h4><p>Apex Analytics</p></div><div class="body">
+   <div class="row"><span class="sal">$180k&ndash;$220k</span><span class="pct">88<small>%</small></span></div><div class="meta">Remote</div>
+   <div class="sk"><i>TypeScript</i><i>React</i><i>JavaScript</i></div>
+   <div class="next od"><span>Overdue &middot; Oct 27</span><b>Review offer letter and benefits</b></div>
+   <select aria-label="Status"><option>Saved</option><option>Applied</option><option>Screening</option><option>Interviewing</option><option selected>Offer</option><option>Closed</option></select></div></article></div>
+ <button class="closed" aria-expanded="false" aria-label="Closed, 2 jobs, expand"><span>Closed</span><b>2</b></button>
+</section>
+</main></body></html>

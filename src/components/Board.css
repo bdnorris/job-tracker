@@ -9,84 +9,100 @@
      columns can't widen the page; overflow only clips its own containing block. */
   position: relative;
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(260px, 1fr);
+  grid-template-columns: repeat(var(--cols, 5), minmax(250px, 1fr)) auto;
   gap: 1rem;
   overflow-x: auto;
   padding-bottom: 0.5rem;
 }
 
 .board-column {
-  background-color: var(--bg-subtle);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
-  min-width: 260px;
+  min-width: 250px;
   min-height: 12rem;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  border-radius: var(--radius-md);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .board-column.is-drop-target {
-  border-color: var(--primary);
   background-color: var(--primary-subtle);
+  box-shadow: 0 0 0 1px var(--rule);
 }
 
 .board-column-header {
-  padding: 0.75rem 1rem;
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--border-subtle);
+  align-items: baseline;
+  padding: 0 0.15rem 0.5rem;
+  border-bottom: 2px solid var(--rule);
 }
 
 .board-column-title {
-  font-size: 0.875rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   font-weight: 600;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
 }
 
 .board-column-count {
-  background-color: var(--bg-surface);
-  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  padding: 0;
 }
 
 .board-column-cards {
-  padding: 0.75rem;
+  /* Long columns scroll in place so every stage stays in view. */
+  max-height: calc(100dvh - var(--header-height) - 6rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.75rem 0.5rem 0.5rem;
+  margin: 0 -0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: 0.75rem;
   flex: 1;
 }
 
 .board-column-empty {
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
   text-align: center;
   padding: 1.5rem 0;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-md);
 }
 
 .drop-indicator {
   height: 3px;
-  border-radius: var(--radius-full);
-  background-color: var(--primary);
+  border-radius: var(--radius-sm);
+  background-color: var(--alert);
+  box-shadow: 0 0 0 1px var(--rule);
   margin: -0.2rem 0;
 }
 
+/* The pass: labeled segments above a perforation, the stub below. */
 .board-card {
+  --notch: 7px;
+  position: relative;
   background-color: var(--bg-surface);
-  border: 1px solid var(--border-subtle);
+  border: 1px solid var(--rule);
   border-radius: var(--radius-md);
-  box-shadow: var(--shadow-sm);
-  padding: 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
   cursor: grab;
-  transition: box-shadow 0.15s ease, opacity 0.15s ease;
+  transition: box-shadow 0.2s ease, opacity 0.15s ease;
 }
 
 .board-card:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 0 0 1px var(--rule);
 }
 
 .board-card.is-dragging {
@@ -94,59 +110,115 @@
 }
 
 .board-card.is-pending {
-  opacity: 0.7;
+  opacity: 0.75;
+}
+
+/* Signature: a moved pass holds the lit state until you've moved on. */
+.board-card.is-lit {
+  outline: 2px solid var(--rule);
+  outline-offset: 1px;
+}
+.board-card.is-lit .pass-stub {
+  --focus: var(--alert-ink);
+  background-color: var(--alert);
+  color: var(--alert-ink);
+  --text-secondary: var(--alert-ink);
+  --text-muted: var(--alert-ink);
+}
+
+.pass-main {
+  padding: 0.7rem 0.8rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
 }
 
 .board-card-top {
   display: flex;
-  gap: 0.375rem;
+  gap: 0.5rem;
   align-items: flex-start;
 }
 
 .drag-handle {
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  line-height: 1.4rem;
-  letter-spacing: -0.15em;
-  user-select: none;
-}
-
-.board-card-heading {
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-  min-width: 0;
+  flex: none;
+  width: 8px;
+  height: 14px;
+  margin-top: 0.2rem;
+  fill: var(--text-muted);
 }
 
 .board-card-title {
-  font-weight: 600;
-  font-size: 0.925rem;
+  flex: 1;
+  min-width: 0;
+  font-weight: 650;
+  font-size: 0.9375rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
   overflow-wrap: anywhere;
 }
 
-.board-card-company {
-  font-size: 0.8rem;
+.match-badge {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.15rem 0.35rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
   color: var(--text-secondary);
 }
 
-.board-card-badges {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.375rem;
-  font-size: 0.75rem;
-}
-
-.board-card-salary {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-variant-numeric: tabular-nums;
-}
-
 .match-badge.match-high {
-  background-color: var(--success-subtle);
-  color: var(--success);
+  background-color: var(--primary);
+  border-color: var(--primary);
+  color: var(--text-inverse);
+}
+
+.pass-segs {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.pass-seg {
+  min-width: 0;
+  padding-top: 0.45rem;
+}
+
+.pass-seg-wide {
+  grid-column: 1 / -1;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.pass-seg + .pass-seg:not(.pass-seg-wide) + .pass-seg {
+  padding-left: 0.75rem;
+  margin-left: 0.75rem;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.pass-seg dt,
+.pass-label {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  font-weight: 500;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.pass-seg dd {
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.pass-mono {
+  font-family: var(--font-mono);
+  font-size: 0.75rem !important;
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .board-card-skills {
@@ -157,77 +229,174 @@
 }
 
 .skill-tag {
-  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
   padding: 0.05rem 0.4rem;
   border-radius: var(--radius-sm);
-  background-color: var(--bg-subtle);
-  color: var(--text-secondary);
-  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  border: 1px dashed var(--border-strong);
 }
 
 .skill-tag.skill-matched {
-  border-color: var(--primary-border);
+  border-style: solid;
+  border-color: var(--rule);
   color: var(--text-primary);
+}
+
+/* Perforation with punched notches. */
+.pass-stub {
+  position: relative;
+  padding: 0.65rem 0.8rem 0.75rem;
+  background-color: var(--bg-subtle);
+  border-top: 2px dashed var(--border-strong);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  transition: background-color 0.3s var(--ease-out);
+}
+
+.pass-stub::before,
+.pass-stub::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--notch) * -1 - 1px);
+  width: calc(var(--notch) * 2);
+  height: calc(var(--notch) * 2);
+  border-radius: 50%;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--rule);
+  clip-path: inset(0 0 0 50%);
+}
+
+.pass-stub::before {
+  left: calc(var(--notch) * -1 - 1px);
+}
+
+.pass-stub::after {
+  right: calc(var(--notch) * -1 - 1px);
+  clip-path: inset(0 50% 0 0);
 }
 
 .board-card-action {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  gap: 0.5rem;
+  align-items: baseline;
+}
+
+.board-card-action-body {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  padding-top: 0.4rem;
-  border-top: 1px dashed var(--border-subtle);
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.board-card-action-text {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-primary);
 }
 
 .board-card-action time {
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
 }
 
-.board-card-action.overdue,
-.board-card-action.overdue time {
+.board-card-action.overdue .board-card-action-text,
+.board-card-action.overdue time,
+.board-card-action.overdue .pass-label {
   color: var(--danger);
-  font-weight: 600;
+}
+
+.board-card-action.overdue time {
+  font-weight: 700;
 }
 
 .board-card-action.due-today time {
-  color: var(--text-primary);
-  font-weight: 600;
+  justify-self: start;
+  align-self: start;
+  padding: 0.05rem 0.35rem;
+  background-color: var(--alert);
+  color: var(--alert-ink);
+  border-radius: var(--radius-sm);
+  font-weight: 700;
 }
 
 .select-sm {
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
+  min-height: 2rem;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.8125rem;
 }
 
-.board-closed {
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  padding: 0.75rem 1rem;
-  background-color: var(--bg-surface);
-}
-
-.board-closed > summary {
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.875rem;
+/* Closed: a collapsed rail at the end of the board; opening it adds the closed stages as columns. */
+.closed-rail {
+  align-self: start;
+  width: 3.5rem;
+  min-height: 12rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
+  padding: 0.75rem 0;
+  background-color: var(--shell-bg);
+  color: var(--shell-text);
+  border: 1px solid var(--shell-bg);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  --focus: var(--rule);
 }
 
-.board-columns-closed {
-  margin-top: 0.75rem;
+.closed-rail:hover {
+  background-color: var(--shell-raised);
+}
+
+.closed-rail-count {
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+  font-weight: 500;
+}
+
+.closed-rail-label {
+  writing-mode: vertical-rl;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+}
+
+.closed-rail-icon {
+  width: 10px;
+  height: 10px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  transition: transform 0.2s var(--ease-out);
+}
+
+.closed-rail[aria-expanded="true"] .closed-rail-icon {
+  transform: rotate(180deg);
 }
 
 .board-column.is-closed {
   min-height: 6rem;
 }
 
+/* Closed jobs print in grey: still on file, out of the running. */
+.board-column.is-closed .board-card {
+  filter: grayscale(1);
+  border-color: var(--border-strong);
+}
+
 @media (max-width: 640px) {
   .board-columns {
-    grid-auto-columns: minmax(240px, 85%);
+    grid-template-columns: repeat(var(--cols, 5), minmax(240px, 85%)) auto;
   }
   .board-column {
     min-width: 240px;

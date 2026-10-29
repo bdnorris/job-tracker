@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Ledger — Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Spectral:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--cloth:#1f3a2e;--cloth-2:#2a4a3b;--stock:#f3f5ee;--leaf:#fbfcf8;--rule:#c9d6cb;--rule-2:#9fb8a6;--ink:#1c2433;--ink-2:#4a5566;--ink-3:#5a6472;--red:#b3261e}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1440px;height:900px;overflow:hidden}
+body{background:var(--stock);color:var(--ink);font:13px/1.4 "Public Sans",system-ui,sans-serif;font-variant-numeric:tabular-nums lining-nums}
+.sc{font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+header{height:52px;background:var(--cloth);color:#e9efe6;display:flex;align-items:center;padding:0 28px;gap:36px}
+.brand{font:600 18px "Spectral",serif;letter-spacing:.01em;color:#fff}
+nav{display:flex;gap:4px;height:100%}
+nav a{color:#c8d6cc;text-decoration:none;font-weight:500;padding:0 12px;display:flex;align-items:center;height:100%;position:relative}
+nav a.on{color:#fff}
+nav a.on:after{content:"";position:absolute;left:12px;right:12px;bottom:10px;border-bottom:3px double #e9efe6}
+.out{margin-left:auto;background:transparent;border:1px solid #5d7a6a;color:#e9efe6;font:500 12px "Public Sans";padding:5px 12px;border-radius:3px}
+.strip{display:grid;grid-template-columns:1fr 360px 330px;gap:0;margin:20px 28px 0;background:var(--leaf);border:1px solid var(--rule);border-bottom:3px double var(--ink)}
+.bal{padding:14px 20px 12px}
+.bal h2{font:600 15px "Spectral",serif;display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.bal h2 span{font:500 12px "Public Sans";color:var(--ink-3)}
+.figs{display:grid;grid-template-columns:repeat(6,1fr) 1px repeat(2,1fr);border-top:1px solid var(--rule)}
+.figs div{padding:8px 0 2px}
+.figs .sep{background:var(--rule);padding:0;margin:8px 10px 0 0}
+.figs b{display:block;font:600 30px/1.1 "Public Sans";letter-spacing:-.01em}
+.figs .grey b{color:var(--ink-3)}
+.list{padding:14px 18px;border-left:1px solid var(--rule)}
+.list h3{margin-bottom:8px}
+.list li{list-style:none;display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:6px 0;border-top:1px solid var(--rule)}
+.list li a{color:var(--ink);font-weight:600;text-decoration:none}
+.list li small{grid-column:1;color:var(--ink-3);font-size:11.5px}
+.list time{font-weight:600;font-size:12px;grid-row:1/span 2;align-self:center;text-align:right}
+.list .od a,.list .od time{color:var(--red)}
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin:22px 28px 10px}
+.toolbar h1{font:600 20px "Spectral",serif}
+.tools{display:flex;gap:8px;align-items:center}
+.tools label{color:var(--ink-2);font-size:12px;display:flex;gap:6px;align-items:center}
+.btn{font:600 12.5px "Public Sans";padding:7px 14px;border-radius:3px;border:1px solid var(--ink);background:var(--ink);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--rule-2)}
+.board{display:grid;grid-template-columns:repeat(5,1fr) 150px;gap:14px;margin:0 28px}
+.col h2{display:flex;justify-content:space-between;align-items:baseline;padding:0 2px 6px;border-bottom:1px solid var(--ink);margin-bottom:10px}
+.col h2 b{font:600 13px "Public Sans";color:var(--ink)}
+.card{background:var(--leaf);border:1px solid var(--rule);border-radius:2px;padding:12px 12px 10px;margin-bottom:10px;display:grid;gap:7px}
+.card .t{font:600 15px/1.25 "Spectral",serif}
+.card .co{color:var(--ink-2);font-size:12px}
+.row{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid var(--rule);padding-top:7px}
+.row .pay{font-weight:600}
+.row .m{font-size:11.5px;color:var(--ink-3)}
+.sk{display:flex;gap:5px;flex-wrap:wrap}
+.sk span{font-size:11px;font-weight:500;color:var(--ink-2);border:1px solid var(--rule);padding:1px 6px;border-radius:2px}
+.next{display:grid;grid-template-columns:1fr auto;gap:8px;font-size:12px;border-top:1px solid var(--rule);padding-top:7px}
+.next time{font-weight:600;white-space:nowrap}
+.next.od{color:var(--red)}
+.next.od time:before{content:"Overdue · ";font-size:10px;letter-spacing:.06em;text-transform:uppercase}
+select{font:500 12px "Public Sans";color:var(--ink);background:var(--stock);border:1px solid var(--rule-2);border-radius:2px;padding:4px 6px;width:100%}
+.closed{border:1px dashed var(--rule-2);padding:10px;filter:grayscale(1);align-self:start}
+.closed .card{padding:8px}
+.closed .card .t{font-size:13px}
+</style></head><body>
+<header>
+ <span class="brand">Job Tracker</span>
+ <nav><a class="on" href="#">Board</a><a href="#">List</a><a href="#">+ Add Job</a><a href="#">App Kit</a><a href="#">Settings</a></nav>
+ <button class="out">Sign Out</button>
+</header>
+
+<section class="strip">
+ <div class="bal">
+  <h2>Balance brought forward <span>Wednesday, 28 October 2026</span></h2>
+  <div class="figs">
+   <div><span class="sc">Saved</span><b>1</b></div>
+   <div><span class="sc">Applied</span><b>1</b></div>
+   <div><span class="sc">Screening</span><b>1</b></div>
+   <div><span class="sc">Interviewing</span><b>1</b></div>
+   <div><span class="sc">Offer</span><b>1</b></div>
+   <div class="grey"><span class="sc">Closed</span><b>2</b></div>
+   <div class="sep"></div>
+   <div><span class="sc">Applied · 7 d</span><b>2</b></div>
+   <div><span class="sc">Applied · 30 d</span><b>5</b></div>
+  </div>
+ </div>
+ <div class="list">
+  <h3 class="sc">Next actions due</h3>
+  <ul>
+   <li class="od"><a href="#">Review offer letter and benefits</a><time>27 Oct</time><small>Staff Software Architect · Apex Analytics</small></li>
+   <li><a href="#">Recruiter phone screen</a><time>Today</time><small>Full Stack Developer · Starlight Robotics</small></li>
+  </ul>
+ </div>
+ <div class="list">
+  <h3 class="sc">Upcoming interviews</h3>
+  <ul>
+   <li><a href="#">System Design panel</a><time>Thu 30 Oct<br>2:00 pm</time><small>Senior Frontend Engineer · Acme Cloud Systems</small></li>
+  </ul>
+ </div>
+</section>
+
+<div class="toolbar">
+ <h1>Board</h1>
+ <div class="tools"><label><input type="checkbox"> Show archived</label><button class="btn ghost">List view</button><button class="btn">+ Add Job</button></div>
+</div>
+
+<main class="board">
+ <section class="col"><h2><span class="sc">Saved</span><b>1</b></h2>
+  <article class="card"><div><div class="t">Backend Services Engineer</div><div class="co">Initech Labs · Austin, TX · Remote</div></div>
+   <div class="row"><span class="pay">$115,000 – $140,000</span><span class="m">Match 67%</span></div>
+   <div class="sk"><span>TypeScript</span><span>JavaScript</span><span>Astro</span></div>
+   <div class="next"><span>Tailor resume for posting</span><time>29 Oct</time></div>
+   <select><option>Saved</option></select></article>
+ </section>
+ <section class="col"><h2><span class="sc">Applied</span><b>1</b></h2>
+  <article class="card"><div><div class="t">UI Platform Engineer</div><div class="co">Globex Software · New York, NY · Onsite</div></div>
+   <div class="row"><span class="pay">$130,000 – $160,000</span><span class="m">Match 75%</span></div>
+   <div class="sk"><span>React</span><span>TypeScript</span><span>JavaScript</span></div>
+   <div class="next"><span>Follow up if no reply</span><time>1 Nov</time></div>
+   <select><option>Applied</option></select></article>
+ </section>
+ <section class="col"><h2><span class="sc">Screening</span><b>1</b></h2>
+  <article class="card"><div><div class="t">Full Stack Developer</div><div class="co">Starlight Robotics · Chicago, IL · Hybrid</div></div>
+   <div class="row"><span class="pay">$125,000 – $150,000</span><span class="m">Match 60%</span></div>
+   <div class="sk"><span>React</span><span>JavaScript</span></div>
+   <div class="next"><span>Recruiter phone screen</span><time>Today</time></div>
+   <select><option>Screening</option></select></article>
+ </section>
+ <section class="col"><h2><span class="sc">Interviewing</span><b>1</b></h2>
+  <article class="card"><div><div class="t">Senior Frontend Engineer</div><div class="co">Acme Cloud Systems · Remote, US</div></div>
+   <div class="row"><span class="pay">$140,000 – $175,000</span><span class="m">Match 100%</span></div>
+   <div class="sk"><span>TypeScript</span><span>React</span><span>Astro</span></div>
+   <div class="next"><span>Prep for System Design panel</span><time>30 Oct</time></div>
+   <select><option>Interviewing</option></select></article>
+ </section>
+ <section class="col"><h2><span class="sc">Offer</span><b>1</b></h2>
+  <article class="card"><div><div class="t">Staff Software Architect</div><div class="co">Apex Analytics · Remote</div></div>
+   <div class="row"><span class="pay">$180,000 – $220,000</span><span class="m">Match 50%</span></div>
+   <div class="sk"><span>TypeScript</span><span>JavaScript</span></div>
+   <div class="next od"><span>Review offer letter and benefits</span><time>27 Oct</time></div>
+   <select><option>Offer</option></select></article>
+ </section>
+ <section class="col closed"><h2><span class="sc">Closed</span><b>2</b></h2>
+  <article class="card"><div class="t">Cloud Infrastructure Lead</div><div class="co">Umbrella Security · Rejected</div></article>
+  <article class="card"><div class="t">Data Platform Engineer</div><div class="co">Hooli · Withdrawn</div></article>
+ </section>
+</main>
+</body></html>

@@ -1,4 +1,6 @@
 ---
+import '@fontsource-variable/inter-tight';
+import '@fontsource-variable/jetbrains-mono';
 import '../styles/tokens.css';
 import '../styles/base.css';
 import printCssUrl from '../styles/print.css?url';
@@ -20,6 +22,14 @@ const printClass = config.print.showUrls ? 'show-urls' : '';
 const highlightCss = config.highlights.categories
   .map((c) => `.hl-${c.id}{--hl-bg:${c.color}}.hl-hide-${c.id} mark.hl-${c.id}{--hl-bg:transparent}`)
   .join('');
+
+const navItems = [
+  { href: '/', label: 'Board', active: currentPath === '/' },
+  { href: '/jobs', label: 'List', active: currentPath === '/jobs' },
+  { href: '/jobs/new', label: 'Add Job', active: currentPath === '/jobs/new', add: true },
+  { href: '/profile', label: 'App Kit', active: currentPath.startsWith('/profile') },
+  { href: '/settings', label: 'Settings', active: currentPath.startsWith('/settings') },
+];
 ---
 
 <!doctype html>
@@ -28,49 +38,79 @@ const highlightCss = config.highlights.categories
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Single-user job tracking board" />
+    <meta name="theme-color" content="#0b0d10" />
     <title>{pageTitle}</title>
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232563eb'/%3E%3Cpath d='M9 10h14M9 16h14M9 22h9' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='3' fill='%230b0d10'/%3E%3Crect x='7' y='8' width='18' height='3' fill='%23f4f5f6'/%3E%3Crect x='7' y='14.5' width='18' height='3' fill='%23ffd400'/%3E%3Crect x='7' y='21' width='12' height='3' fill='%23f4f5f6'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href={printCssUrl} media="print" />
     <style is:inline set:html={highlightCss}></style>
     <slot name="head" />
   </head>
   <body class={printClass}>
-    <a href="#main-content" class="sr-only">Skip to content</a>
+    <a href="#main-content" class="skip-link">Skip to content</a>
 
     {showNav && (
       <header class="app-header no-print">
         <div class="header-inner">
-          <div class="brand">
-            <a href="/" class="brand-link">
-              <span class="brand-name">{config.app.name}</span>
-            </a>
-          </div>
+          <a href="/" class="brand-link">
+            <svg class="brand-mark" viewBox="0 0 20 20" aria-hidden="true">
+              <rect x="0" y="2" width="20" height="3" />
+              <rect x="0" y="8.5" width="20" height="3" class="brand-mark-now" />
+              <rect x="0" y="15" width="13" height="3" />
+            </svg>
+            <span class="brand-name">{config.app.name}</span>
+          </a>
 
           <nav class="main-nav" aria-label="Main Navigation">
-            <a href="/" class={currentPath === '/' ? 'active' : ''}>Board</a>
-            <a href="/jobs" class={currentPath === '/jobs' ? 'active' : ''}>List</a>
-            <a href="/jobs/new" class={currentPath === '/jobs/new' ? 'active' : ''}>+ Add Job</a>
-            <a href="/profile" class={currentPath.startsWith('/profile') ? 'active' : ''}>App Kit</a>
-            <a href="/settings" class={currentPath.startsWith('/settings') ? 'active' : ''}>Settings</a>
+            {navItems.map((item) => (
+              <a
+                href={item.href}
+                class:list={[{ active: item.active, 'nav-add': item.add }]}
+                aria-current={item.active ? 'page' : undefined}
+              >
+                {item.add && (
+                  <svg viewBox="0 0 12 12" aria-hidden="true" class="nav-add-icon">
+                    <path d="M6 1v10M1 6h10" />
+                  </svg>
+                )}
+                {item.label}
+              </a>
+            ))}
           </nav>
 
-          <div class="header-actions">
-            <form action="/api/auth/logout" method="POST">
-              <button type="submit" class="btn btn-sm">Sign Out</button>
-            </form>
-          </div>
+          <form action="/api/auth/logout" method="POST" class="header-actions">
+            <button type="submit" class="signout">Sign Out</button>
+          </form>
         </div>
       </header>
     )}
 
-    <main id="main-content" class="main-container">
-      <slot />
+    <main id="main-content">
+      <slot name="band" />
+      <div class="main-container">
+        <slot />
+      </div>
     </main>
 
     <style>
+      .skip-link {
+        position: absolute;
+        left: 1rem;
+        top: -100px;
+        z-index: 100;
+        padding: 0.5rem 0.9rem;
+        background: var(--alert);
+        color: var(--alert-ink);
+        font-weight: 600;
+        border-radius: var(--radius-md);
+      }
+      .skip-link:focus {
+        top: 0.5rem;
+      }
       .app-header {
-        background-color: var(--bg-surface);
-        border-bottom: 1px solid var(--border-subtle);
+        --focus: var(--alert);
+        background-color: var(--shell-bg);
+        color: var(--shell-text);
+        border-bottom: 1px solid var(--shell-line);
         height: var(--header-height);
         position: sticky;
         top: 0;
@@ -83,36 +123,98 @@ const highlightCss = config.highlights.categories
         height: 100%;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 1.5rem;
+        gap: 2rem;
       }
       .brand-link {
-        font-weight: 700;
-        font-size: 1.125rem;
-        color: var(--text-primary);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        color: var(--shell-text);
         text-decoration: none;
+        white-space: nowrap;
+      }
+      .brand-link:hover {
+        text-decoration: none;
+      }
+      .brand-mark {
+        width: 18px;
+        height: 18px;
+        fill: var(--shell-text);
+      }
+      .brand-mark .brand-mark-now {
+        fill: var(--alert);
+      }
+      .brand-name {
+        font-family: var(--font-mono);
+        font-size: 0.8125rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
       }
       .main-nav {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.25rem;
+        flex: 1;
       }
       .main-nav a {
-        padding: 0.4rem 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.75rem;
         border-radius: var(--radius-md);
         font-size: 0.875rem;
         font-weight: 500;
-        color: var(--text-secondary);
+        color: var(--shell-muted);
         text-decoration: none;
+        white-space: nowrap;
         transition: background-color 0.15s ease, color 0.15s ease;
       }
       .main-nav a:hover {
-        background-color: var(--bg-subtle);
-        color: var(--text-primary);
+        background-color: var(--shell-raised);
+        color: var(--shell-text);
       }
       .main-nav a.active {
-        background-color: var(--primary-subtle);
-        color: var(--primary);
+        background-color: var(--shell-text);
+        color: var(--shell-bg);
+      }
+      .main-nav a.nav-add {
+        margin-left: 0.5rem;
+        border: 1px solid var(--shell-line);
+        color: var(--shell-text);
+      }
+      .main-nav a.nav-add.active {
+        border-color: var(--shell-text);
+      }
+      .nav-add-icon {
+        width: 11px;
+        height: 11px;
+        stroke: currentColor;
+        stroke-width: 1.75;
+        fill: none;
+      }
+      .signout {
+        background: none;
+        border: 1px solid transparent;
+        border-radius: var(--radius-md);
+        padding: 0.35rem 0.6rem;
+        color: var(--shell-muted);
+        font-family: var(--font-mono);
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        cursor: pointer;
+        white-space: nowrap;
+      }
+      .signout:hover {
+        color: var(--shell-text);
+        border-color: var(--shell-line);
+      }
+      main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
       }
       .main-container {
         flex: 1;
@@ -121,27 +223,31 @@ const highlightCss = config.highlights.categories
         margin: 0 auto;
         padding: 1.5rem;
       }
-      .main-nav a {
-        white-space: nowrap;
-      }
-      @media (max-width: 720px) {
+      @media (max-width: 860px) {
         .app-header {
           height: auto;
         }
         .header-inner {
           flex-wrap: wrap;
           gap: 0.25rem 0.75rem;
-          padding: 0.5rem 1rem;
+          padding: 0.6rem 1rem 0.4rem;
+        }
+        .header-actions {
+          margin-left: auto;
         }
         .main-nav {
           order: 3;
-          width: 100%;
+          flex-basis: 100%;
           overflow-x: auto;
           gap: 0.125rem;
           margin: 0 -0.5rem;
+          padding-bottom: 0.2rem;
         }
         .main-nav a {
-          padding: 0.35rem 0.5rem;
+          padding: 0.4rem 0.6rem;
+        }
+        .main-nav a.nav-add {
+          margin-left: 0.25rem;
         }
         .main-container {
           padding: 1rem;

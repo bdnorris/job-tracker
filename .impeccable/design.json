@@ -1,0 +1,905 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-29T13:30:10.512Z",
+  "title": "Design System: Job Tracker",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "primary",
+        "displayName": "Gate Ink",
+        "canonical": "#0b0d10",
+        "tonalRamp": [
+          "#252629",
+          "#424446",
+          "#5f6163",
+          "#7d7e7f",
+          "#9a9b9c",
+          "#b7b8b9",
+          "#d5d5d6",
+          "#f2f2f2"
+        ]
+      },
+      "ink-hover": {
+        "role": "primary",
+        "displayName": "Ink Lift",
+        "canonical": "#2b3038",
+        "tonalRamp": [
+          "#23272d",
+          "#3f444b",
+          "#5d6167",
+          "#7b7e83",
+          "#999b9f",
+          "#b6b8bb",
+          "#d4d5d7",
+          "#f2f2f3"
+        ]
+      },
+      "slate": {
+        "role": "neutral",
+        "displayName": "Slate",
+        "canonical": "#1c2127",
+        "tonalRamp": [
+          "#22272d",
+          "#404449",
+          "#5d6165",
+          "#7b7e82",
+          "#999b9e",
+          "#b7b8ba",
+          "#d4d5d6",
+          "#f2f2f3"
+        ]
+      },
+      "shell-line": {
+        "role": "neutral",
+        "displayName": "Shell Line",
+        "canonical": "#2e343c",
+        "tonalRamp": [
+          "#22272d",
+          "#3f444b",
+          "#5c6167",
+          "#7a7e83",
+          "#989b9f",
+          "#b6b8bb",
+          "#d4d5d7",
+          "#f2f2f3"
+        ]
+      },
+      "shell-text": {
+        "role": "neutral",
+        "displayName": "Shell Text",
+        "canonical": "#f4f5f6",
+        "tonalRamp": [
+          "#262626",
+          "#434344",
+          "#606161",
+          "#7d7e7e",
+          "#9a9b9c",
+          "#b7b8b9",
+          "#d4d5d6",
+          "#f1f2f3"
+        ]
+      },
+      "shell-muted": {
+        "role": "neutral",
+        "displayName": "Shell Muted",
+        "canonical": "#a6acb4",
+        "tonalRamp": [
+          "#252628",
+          "#414447",
+          "#5e6165",
+          "#7a7e84",
+          "#969ba3",
+          "#b3b9bf",
+          "#d2d5d9",
+          "#f1f2f4"
+        ]
+      },
+      "shell-danger": {
+        "role": "tertiary",
+        "displayName": "Shell Danger",
+        "canonical": "#ff7b6e",
+        "tonalRamp": [
+          "#411f1c",
+          "#723731",
+          "#a44f47",
+          "#d5675c",
+          "#ff8174",
+          "#ffa69d",
+          "#ffcac5",
+          "#ffefed"
+        ]
+      },
+      "panel-grey": {
+        "role": "neutral",
+        "displayName": "Panel Grey",
+        "canonical": "#e6e8eb",
+        "tonalRamp": [
+          "#262627",
+          "#434344",
+          "#606162",
+          "#7d7e7f",
+          "#9a9b9d",
+          "#b7b8bb",
+          "#d3d5d8",
+          "#f1f2f4"
+        ]
+      },
+      "pass-white": {
+        "role": "neutral",
+        "displayName": "Pass White",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#262626",
+          "#434343",
+          "#616161",
+          "#7e7e7e",
+          "#9b9b9b",
+          "#b8b8b8",
+          "#d5d5d5",
+          "#f2f2f2"
+        ]
+      },
+      "stub-grey": {
+        "role": "neutral",
+        "displayName": "Stub Grey",
+        "canonical": "#f1f2f4",
+        "tonalRamp": [
+          "#262627",
+          "#434344",
+          "#606161",
+          "#7d7e7f",
+          "#9a9b9c",
+          "#b7b8ba",
+          "#d4d5d7",
+          "#f1f2f4"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#cdd1d6",
+        "tonalRamp": [
+          "#262627",
+          "#424445",
+          "#5f6163",
+          "#7c7e81",
+          "#989b9f",
+          "#b5b8bd",
+          "#d2d6da",
+          "#f1f2f4"
+        ]
+      },
+      "steel-line": {
+        "role": "neutral",
+        "displayName": "Steel Line",
+        "canonical": "#868d96",
+        "tonalRamp": [
+          "#252629",
+          "#404448",
+          "#5c6167",
+          "#787e87",
+          "#959ca3",
+          "#b4b8be",
+          "#d3d5d9",
+          "#f2f2f3"
+        ]
+      },
+      "text-secondary": {
+        "role": "neutral",
+        "displayName": "Text Secondary",
+        "canonical": "#3a4048",
+        "tonalRamp": [
+          "#23272c",
+          "#3e444c",
+          "#5c6168",
+          "#7a7e84",
+          "#989b9f",
+          "#b6b8bb",
+          "#d4d5d7",
+          "#f2f2f3"
+        ]
+      },
+      "steel": {
+        "role": "neutral",
+        "displayName": "Steel",
+        "canonical": "#565d66",
+        "tonalRamp": [
+          "#24272a",
+          "#3f444b",
+          "#5b616a",
+          "#797e85",
+          "#979ba1",
+          "#b5b8bc",
+          "#d4d5d8",
+          "#f2f2f3"
+        ]
+      },
+      "alert-yellow": {
+        "role": "secondary",
+        "displayName": "Departures Yellow",
+        "canonical": "#ffd400",
+        "tonalRamp": [
+          "#2f2700",
+          "#534500",
+          "#786300",
+          "#9c8100",
+          "#c09f00",
+          "#e4bd00",
+          "#ffda26",
+          "#fff4bd"
+        ]
+      },
+      "alert-wash": {
+        "role": "secondary",
+        "displayName": "Yellow Wash",
+        "canonical": "#fff6cc",
+        "tonalRamp": [
+          "#282620",
+          "#464438",
+          "#656150",
+          "#837e69",
+          "#a19c81",
+          "#c0b999",
+          "#ded6b2",
+          "#fcf3ca"
+        ]
+      },
+      "overdue-red": {
+        "role": "tertiary",
+        "displayName": "Overdue Red",
+        "canonical": "#c0271a",
+        "tonalRamp": [
+          "#68150e",
+          "#b72519",
+          "#c9453a",
+          "#d3685e",
+          "#dd8a83",
+          "#e7aca7",
+          "#f1cecb",
+          "#fbf0ef"
+        ]
+      },
+      "overdue-red-deep": {
+        "role": "tertiary",
+        "displayName": "Overdue Red Deep",
+        "canonical": "#9c1f14",
+        "tonalRamp": [
+          "#69150d",
+          "#a12b21",
+          "#b04c43",
+          "#be6d66",
+          "#cd8e88",
+          "#dcafab",
+          "#ead0cd",
+          "#f9f1f0"
+        ]
+      },
+      "overdue-wash": {
+        "role": "tertiary",
+        "displayName": "Overdue Wash",
+        "canonical": "#fdecea",
+        "tonalRamp": [
+          "#282625",
+          "#474242",
+          "#665f5e",
+          "#857c7b",
+          "#a49997",
+          "#c2b5b4",
+          "#e1d2d0",
+          "#fdefee"
+        ]
+      },
+      "overdue-border": {
+        "role": "tertiary",
+        "displayName": "Overdue Border",
+        "canonical": "#ef9a92",
+        "tonalRamp": [
+          "#352221",
+          "#5e3d39",
+          "#875752",
+          "#af716b",
+          "#d88b84",
+          "#f1a9a2",
+          "#f7ccc8",
+          "#fdf0ee"
+        ]
+      },
+      "caution-amber": {
+        "role": "tertiary",
+        "displayName": "Caution Amber",
+        "canonical": "#8a5a00",
+        "tonalRamp": [
+          "#382500",
+          "#634100",
+          "#8c5d04",
+          "#a17b33",
+          "#b69961",
+          "#cbb68f",
+          "#e1d4bd",
+          "#f6f2eb"
+        ]
+      },
+      "go-green": {
+        "role": "tertiary",
+        "displayName": "Go Green",
+        "canonical": "#1c6e36",
+        "tonalRamp": [
+          "#0c3017",
+          "#155429",
+          "#277540",
+          "#4f8e63",
+          "#76a886",
+          "#9ec1a9",
+          "#c6dbcc",
+          "#eef4f0"
+        ]
+      },
+      "go-wash": {
+        "role": "tertiary",
+        "displayName": "Go Wash",
+        "canonical": "#e4f2e8",
+        "tonalRamp": [
+          "#252725",
+          "#404442",
+          "#5c625e",
+          "#78807a",
+          "#949d97",
+          "#b0bbb3",
+          "#ccd8cf",
+          "#eaf5ed"
+        ]
+      },
+      "night-ground": {
+        "role": "neutral",
+        "displayName": "Night Ground",
+        "canonical": "#121519",
+        "tonalRamp": [
+          "#24272a",
+          "#414447",
+          "#5f6163",
+          "#7c7e80",
+          "#9a9b9d",
+          "#b7b8b9",
+          "#d5d5d6",
+          "#f2f2f2"
+        ],
+        "theme": "dark"
+      },
+      "night-pass": {
+        "role": "neutral",
+        "displayName": "Night Pass",
+        "canonical": "#1b1f25",
+        "tonalRamp": [
+          "#23272c",
+          "#404449",
+          "#5e6165",
+          "#7c7e81",
+          "#999b9e",
+          "#b7b8ba",
+          "#d4d5d6",
+          "#f2f2f3"
+        ],
+        "theme": "dark"
+      },
+      "night-raised": {
+        "role": "neutral",
+        "displayName": "Night Raised",
+        "canonical": "#252a31",
+        "tonalRamp": [
+          "#22272d",
+          "#3f444a",
+          "#5d6166",
+          "#7b7e82",
+          "#999b9e",
+          "#b6b8ba",
+          "#d4d5d7",
+          "#f2f2f3"
+        ],
+        "theme": "dark"
+      },
+      "night-stub": {
+        "role": "neutral",
+        "displayName": "Night Stub",
+        "canonical": "#161a1f",
+        "tonalRamp": [
+          "#23272b",
+          "#414448",
+          "#5e6164",
+          "#7c7e81",
+          "#999b9d",
+          "#b7b8ba",
+          "#d4d5d6",
+          "#f2f2f3"
+        ],
+        "theme": "dark"
+      },
+      "night-hairline": {
+        "role": "neutral",
+        "displayName": "Night Hairline",
+        "canonical": "#2f353d",
+        "tonalRamp": [
+          "#22272d",
+          "#3e444b",
+          "#5c6167",
+          "#7a7e83",
+          "#989b9f",
+          "#b6b8bb",
+          "#d4d5d7",
+          "#f2f2f3"
+        ],
+        "theme": "dark"
+      },
+      "night-steel-line": {
+        "role": "neutral",
+        "displayName": "Night Steel Line",
+        "canonical": "#59606a",
+        "tonalRamp": [
+          "#24272b",
+          "#3f444b",
+          "#5a616b",
+          "#797e86",
+          "#979ba2",
+          "#b5b8bd",
+          "#d3d5d8",
+          "#f2f2f3"
+        ],
+        "theme": "dark"
+      },
+      "night-rule": {
+        "role": "neutral",
+        "displayName": "Night Rule",
+        "canonical": "#c9ced4",
+        "tonalRamp": [
+          "#252627",
+          "#424446",
+          "#5e6164",
+          "#7b7e82",
+          "#989ba0",
+          "#b4b9be",
+          "#d1d6db",
+          "#f1f2f4"
+        ],
+        "theme": "dark"
+      },
+      "night-text": {
+        "role": "neutral",
+        "displayName": "Night Text",
+        "canonical": "#eef0f2",
+        "tonalRamp": [
+          "#262627",
+          "#434344",
+          "#606161",
+          "#7d7e7f",
+          "#9a9b9c",
+          "#b7b8ba",
+          "#d4d5d7",
+          "#f1f2f4"
+        ],
+        "theme": "dark"
+      },
+      "night-text-secondary": {
+        "role": "neutral",
+        "displayName": "Night Text Secondary",
+        "canonical": "#bcc1c8",
+        "tonalRamp": [
+          "#252628",
+          "#424446",
+          "#5e6164",
+          "#7b7e83",
+          "#979ba1",
+          "#b4b8bf",
+          "#d2d5da",
+          "#f1f2f4"
+        ],
+        "theme": "dark"
+      },
+      "night-steel": {
+        "role": "neutral",
+        "displayName": "Night Steel",
+        "canonical": "#949ba4",
+        "tonalRamp": [
+          "#252629",
+          "#414448",
+          "#5d6167",
+          "#797e86",
+          "#959ca5",
+          "#b4b9bf",
+          "#d3d5d9",
+          "#f1f2f3"
+        ],
+        "theme": "dark"
+      },
+      "night-alert-wash": {
+        "role": "secondary",
+        "displayName": "Night Alert Wash",
+        "canonical": "#3a3206",
+        "tonalRamp": [
+          "#2e2705",
+          "#4c451d",
+          "#686240",
+          "#847f63",
+          "#9f9c86",
+          "#bbb8a9",
+          "#d7d5cc",
+          "#f3f2f0"
+        ],
+        "theme": "dark"
+      },
+      "night-overdue-wash": {
+        "role": "tertiary",
+        "displayName": "Night Overdue Wash",
+        "canonical": "#3b1512",
+        "tonalRamp": [
+          "#431f1c",
+          "#5c3d3a",
+          "#765b59",
+          "#8f7977",
+          "#a89796",
+          "#c1b5b5",
+          "#dbd4d3",
+          "#f4f2f2"
+        ],
+        "theme": "dark"
+      },
+      "night-overdue-border": {
+        "role": "tertiary",
+        "displayName": "Night Overdue Border",
+        "canonical": "#8a2a22",
+        "tonalRamp": [
+          "#551a15",
+          "#8d3028",
+          "#9f504a",
+          "#b1706b",
+          "#c2918c",
+          "#d4b1ae",
+          "#e6d1cf",
+          "#f7f1f0"
+        ],
+        "theme": "dark"
+      },
+      "night-go-green": {
+        "role": "tertiary",
+        "displayName": "Night Go Green",
+        "canonical": "#5fcf86",
+        "tonalRamp": [
+          "#142d1d",
+          "#244e33",
+          "#347049",
+          "#43925f",
+          "#53b475",
+          "#6cd38f",
+          "#a8e5bd",
+          "#e5f7eb"
+        ],
+        "theme": "dark"
+      },
+      "night-go-wash": {
+        "role": "tertiary",
+        "displayName": "Night Go Wash",
+        "canonical": "#12301d",
+        "tonalRamp": [
+          "#112e1c",
+          "#304a3a",
+          "#506658",
+          "#708277",
+          "#909e96",
+          "#b1bbb4",
+          "#d1d7d3",
+          "#f1f3f2"
+        ],
+        "theme": "dark"
+      },
+      "night-shell": {
+        "role": "neutral",
+        "displayName": "Night Shell",
+        "canonical": "#07080a",
+        "tonalRamp": [
+          "#252628",
+          "#434345",
+          "#606162",
+          "#7d7e7f",
+          "#9a9b9c",
+          "#b8b8b9",
+          "#d5d5d5",
+          "#f2f2f2"
+        ],
+        "theme": "dark"
+      },
+      "night-shell-raised": {
+        "role": "neutral",
+        "displayName": "Night Shell Raised",
+        "canonical": "#16191e",
+        "tonalRamp": [
+          "#24272b",
+          "#414448",
+          "#5f6164",
+          "#7c7e81",
+          "#9a9b9d",
+          "#b7b8ba",
+          "#d5d5d6",
+          "#f2f2f3"
+        ],
+        "theme": "dark"
+      },
+      "night-shell-line": {
+        "role": "neutral",
+        "displayName": "Night Shell Line",
+        "canonical": "#262b32",
+        "tonalRamp": [
+          "#22272d",
+          "#3f444a",
+          "#5d6166",
+          "#7b7e82",
+          "#999b9e",
+          "#b6b8ba",
+          "#d4d5d7",
+          "#f2f2f3"
+        ],
+        "theme": "dark"
+      }
+    },
+    "typographyMeta": {
+      "display-clock": {
+        "displayName": "Display Clock",
+        "purpose": "Next interview clock time in the departures band; one per screen."
+      },
+      "display-count": {
+        "displayName": "Display Count",
+        "purpose": "Pipeline stage counts in the departures tiles."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Page title, followed by a mono uppercase count."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Pass card role titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Base reading text with tabular figures."
+      },
+      "body-sm": {
+        "displayName": "Body Small",
+        "purpose": "Pass segment values and NEXT action text."
+      },
+      "data": {
+        "displayName": "Data",
+        "purpose": "Dates, statuses and amounts, uppercase mono."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "All button labels, uppercase mono."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Column heads, panel heads, table headers, the .label utility."
+      },
+      "label-pass": {
+        "displayName": "Label Pass",
+        "purpose": "FROM / PAY / MODE / NEXT segment labels inside a pass."
+      }
+    },
+    "shadows": [
+      {
+        "name": "float-sm",
+        "value": "0 1px 2px 0 rgb(11 13 16 / 0.06)",
+        "purpose": "Small floating chrome only. Dark: rgb(0 0 0 / 0.4)."
+      },
+      {
+        "name": "float-md",
+        "value": "0 4px 10px -2px rgb(11 13 16 / 0.14)",
+        "purpose": "Popovers and menus (e.g. highlighter). Dark: rgb(0 0 0 / 0.5)."
+      },
+      {
+        "name": "float-lg",
+        "value": "0 12px 28px -6px rgb(11 13 16 / 0.28)",
+        "purpose": "Dialogs and large overlays. Dark: rgb(0 0 0 / 0.6)."
+      },
+      {
+        "name": "ink-ring",
+        "value": "0 0 0 1px var(--rule)",
+        "purpose": "Not elevation: thickens a pass rule on hover, rings a focused input, a drop-target column and the drop indicator."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Signature easing: pass FLIP glide, stub light-up, closed-rail chevron."
+      },
+      {
+        "name": "pass-glide",
+        "value": "460ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "FLIP translate of a moved pass from old slot to new; skipped under prefers-reduced-motion."
+      },
+      {
+        "name": "stub-light",
+        "value": "background-color 300ms cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "Stub fills yellow when a pass is lit."
+      },
+      {
+        "name": "state-fast",
+        "value": "150ms ease",
+        "purpose": "Colour transitions on buttons, inputs, nav links, columns."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "prefers-reduced-motion: reduce -> 0.01ms",
+        "purpose": "All animation and transition durations collapse globally."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "board-narrow",
+        "value": "640px",
+        "purpose": "Board columns become 240px–85% so the next column peeks."
+      },
+      {
+        "name": "departures-stack-rows",
+        "value": "720px",
+        "purpose": "Departures table rows become two-line grids; band padding 1rem."
+      },
+      {
+        "name": "nav-wrap",
+        "value": "860px",
+        "purpose": "Header nav wraps to its own scrolling row; container padding 1rem."
+      },
+      {
+        "name": "departures-stack",
+        "value": "960px",
+        "purpose": "Departures band stacks pipeline, actions, interviews."
+      },
+      {
+        "name": "max-width",
+        "value": "1520px",
+        "purpose": "Content container cap."
+      }
+    ],
+    "scope": {
+      "restyled": [
+        "/ (board + departures band)",
+        "app shell (Layout.astro)"
+      ],
+      "inheritingOnly": [
+        "job detail /jobs/[id]",
+        "list /jobs",
+        "add job /jobs/new",
+        "application kit /profile",
+        "settings",
+        "print job and prep sheets"
+      ],
+      "note": "Inheriting pages pick up tokens, shell and base components but have not been individually restyled."
+    }
+  },
+  "components": [
+    {
+      "name": "Default Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "Outlined mono-caps counter button; pressing lights it yellow.",
+      "html": "<button class=\"ds-btn\">List view</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 2.25rem; padding: 0.45rem 1rem; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.2; border-radius: var(--radius-md); border: 1px solid var(--rule); cursor: pointer; transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease; background: var(--bg-surface); color: var(--text-primary); } .ds-btn:hover { background: var(--bg-subtle); } .ds-btn:active { background: var(--alert); border-color: var(--alert); color: var(--alert-ink); } .ds-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Solid ink action; inverts to light ink in dark mode.",
+      "html": "<button class=\"ds-btn-primary\">Add Job</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; min-height: 2.25rem; padding: 0.45rem 1rem; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.2; border-radius: var(--radius-md); border: 1px solid var(--rule); cursor: pointer; transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease; background: var(--primary); border-color: var(--primary); color: var(--text-inverse); } .ds-btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); } .ds-btn-primary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }"
+    },
+    {
+      "name": "Danger Button",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Destructive action; red wash at rest, solid red on hover.",
+      "html": "<button class=\"ds-btn-danger\">Delete</button>",
+      "css": ".ds-btn-danger { display: inline-flex; align-items: center; justify-content: center; min-height: 2.25rem; padding: 0.45rem 1rem; font-family: var(--font-mono); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.2; border-radius: var(--radius-md); border: 1px solid var(--rule); cursor: pointer; transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease; background: var(--danger-subtle); color: var(--danger); border-color: var(--danger-border); } .ds-btn-danger:hover { background: var(--danger); border-color: var(--danger); color: var(--text-inverse); } .ds-btn-danger:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }"
+    },
+    {
+      "name": "Status Select",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Squared select with drawn chevron; ink ring on focus.",
+      "html": "<select class=\"ds-select\" aria-label=\"Status\"><option>Applied</option><option>Screening</option></select>",
+      "css": ".ds-select { appearance: none; -webkit-appearance: none; width: 100%; min-height: 2.25rem; padding: 0.45rem 2rem 0.45rem 0.7rem; border-radius: var(--radius-md); border: 1px solid var(--border-strong); background-color: var(--bg-surface); background-image: var(--select-chevron); background-repeat: no-repeat; background-position: right 0.6rem center; background-size: 12px 12px; color: var(--text-primary); font-family: var(--font-sans); font-size: 0.875rem; transition: border-color 0.15s ease, box-shadow 0.15s ease; } .ds-select:hover { border-color: var(--rule); } .ds-select:focus { border-color: var(--rule); outline: none; box-shadow: 0 0 0 1px var(--rule); } .ds-select:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }"
+    },
+    {
+      "name": "Shell Navigation",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Ink header with gate-mark brand, muted links and a solid active pill.",
+      "html": "<nav class=\"ds-nav\"><span class=\"ds-brand\"><svg viewBox=\"0 0 20 20\" width=\"18\" height=\"18\" aria-hidden=\"true\"><rect x=\"0\" y=\"2\" width=\"20\" height=\"3\" fill=\"#f4f5f6\"/><rect x=\"0\" y=\"8.5\" width=\"20\" height=\"3\" fill=\"#ffd400\"/><rect x=\"0\" y=\"15\" width=\"13\" height=\"3\" fill=\"#f4f5f6\"/></svg>Job Tracker</span><a href=\"#\" class=\"active\">Board</a><a href=\"#\">List</a><a href=\"#\" class=\"add\"><svg viewBox=\"0 0 12 12\" width=\"11\" height=\"11\" aria-hidden=\"true\"><path d=\"M6 1v10M1 6h10\" stroke=\"currentColor\" stroke-width=\"1.75\" fill=\"none\"/></svg>Add Job</a><a href=\"#\">Settings</a></nav>",
+      "css": ".ds-nav { --focus: var(--alert); display: flex; align-items: center; gap: 0.25rem; height: 52px; padding: 0 1.5rem; background: var(--shell-bg); border-bottom: 1px solid var(--shell-line); } .ds-brand { display: inline-flex; align-items: center; gap: 0.6rem; margin-right: 1.75rem; color: var(--shell-text); font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; } .ds-nav a { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.4rem 0.75rem; border-radius: var(--radius-md); font-family: var(--font-sans); font-size: 0.875rem; font-weight: 500; color: var(--shell-muted); text-decoration: none; transition: background-color 0.15s ease, color 0.15s ease; } .ds-nav a:hover { background: var(--shell-raised); color: var(--shell-text); } .ds-nav a.active { background: var(--shell-text); color: var(--shell-bg); } .ds-nav a.add { margin-left: 0.5rem; border: 1px solid var(--shell-line); color: var(--shell-text); } .ds-nav a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }"
+    },
+    {
+      "name": "Skill Tags and Match Badge",
+      "kind": "chip",
+      "refersTo": "skill-tag",
+      "description": "Dashed = unmatched, solid ink = matched; 50%+ match fills ink.",
+      "html": "<div class=\"ds-chips\"><span class=\"ds-match\">100%</span><span class=\"ds-skill on\">React</span><span class=\"ds-skill\">GraphQL</span><span class=\"ds-badge\">31</span></div>",
+      "css": ".ds-chips { display: flex; gap: 0.25rem; align-items: center; } .ds-skill, .ds-match, .ds-badge { font-family: var(--font-mono); font-size: 0.6875rem; border-radius: var(--radius-sm); } .ds-skill { padding: 0.05rem 0.4rem; color: var(--text-muted); border: 1px dashed var(--border-strong); } .ds-skill.on { border-style: solid; border-color: var(--rule); color: var(--text-primary); } .ds-match { font-weight: 700; padding: 0.15rem 0.35rem; background: var(--primary); border: 1px solid var(--primary); color: var(--text-inverse); } .ds-badge { padding: 0.15rem 0.45rem; font-weight: 500; letter-spacing: 0.04em; background: var(--bg-subtle); color: var(--text-secondary); border: 1px solid var(--border-subtle); }"
+    },
+    {
+      "name": "Pass Card",
+      "kind": "card",
+      "refersTo": "pass-card",
+      "description": "Boarding pass per job: segments, notched perforation, NEXT stub; the lit state shows a just-moved pass.",
+      "html": "<article class=\"ds-pass\"><div class=\"ds-pass-main\"><a href=\"#\" class=\"ds-pass-title\">Senior Frontend Engineer</a><dl class=\"ds-segs\"><div class=\"ds-seg wide\"><dt>From</dt><dd>Acme Cloud Systems</dd></div><div class=\"ds-seg\"><dt>Pay</dt><dd class=\"mono\">USD 140,000–165,000/yr</dd></div><div class=\"ds-seg\"><dt>Mode</dt><dd>Remote</dd></div></dl></div><div class=\"ds-stub\"><div class=\"ds-next\"><span class=\"ds-lbl\">Next</span><div><span class=\"ds-act\">Recruiter phone screen</span><time class=\"today\">Today · Oct 29</time></div></div></div></article><article class=\"ds-pass lit\"><div class=\"ds-pass-main\"><a href=\"#\" class=\"ds-pass-title\">UX Engineer</a><dl class=\"ds-segs\"><div class=\"ds-seg wide\"><dt>From</dt><dd>Alley</dd></div><div class=\"ds-seg\"><dt>Pay</dt><dd class=\"mono\">—</dd></div><div class=\"ds-seg\"><dt>Mode</dt><dd>Hybrid</dd></div></dl></div><div class=\"ds-stub\"><div class=\"ds-next\"><span class=\"ds-lbl\">Next</span><div><span class=\"ds-act\">Send portfolio</span><time class=\"late\">Overdue · Oct 27</time></div></div></div></article>",
+      "css": ".ds-pass { --notch: 7px; position: relative; width: 260px; margin-bottom: 0.75rem; background: var(--bg-surface); border: 1px solid var(--rule); border-radius: var(--radius-md); display: flex; flex-direction: column; transition: box-shadow 0.2s ease; } .ds-pass:hover { box-shadow: 0 0 0 1px var(--rule); } .ds-pass.lit { outline: 2px solid var(--rule); outline-offset: 1px; } .ds-pass-main { padding: 0.7rem 0.8rem 0.75rem; display: flex; flex-direction: column; gap: 0.6rem; } .ds-pass-title { font-family: var(--font-sans); font-weight: 650; font-size: 0.9375rem; line-height: 1.25; letter-spacing: -0.01em; color: var(--text-primary); text-decoration: none; } .ds-pass-title:hover { text-decoration: underline; } .ds-pass-title:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; } .ds-segs { display: grid; grid-template-columns: 1fr auto; border-top: 1px solid var(--border-subtle); margin: 0; } .ds-seg { padding-top: 0.45rem; min-width: 0; } .ds-seg.wide { grid-column: 1 / -1; padding-bottom: 0.45rem; border-bottom: 1px solid var(--border-subtle); } .ds-seg.wide + .ds-seg + .ds-seg { padding-left: 0.75rem; margin-left: 0.75rem; border-left: 1px solid var(--border-subtle); } .ds-seg dt, .ds-lbl { font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); } .ds-seg dd { margin: 0; font-family: var(--font-sans); font-size: 0.8125rem; color: var(--text-primary); } .ds-seg dd.mono { font-family: var(--font-mono); font-size: 0.75rem; font-weight: 500; white-space: nowrap; } .ds-stub { position: relative; padding: 0.65rem 0.8rem 0.75rem; background: var(--bg-subtle); border-top: 2px dashed var(--border-strong); border-radius: 0 0 var(--radius-md) var(--radius-md); transition: background-color 0.3s var(--ease-out); } .ds-stub::before, .ds-stub::after { content: \"\"; position: absolute; top: calc(var(--notch) * -1 - 1px); width: calc(var(--notch) * 2); height: calc(var(--notch) * 2); border-radius: 50%; background: var(--bg-primary); border: 1px solid var(--rule); } .ds-stub::before { left: calc(var(--notch) * -1 - 1px); clip-path: inset(0 0 0 50%); } .ds-stub::after { right: calc(var(--notch) * -1 - 1px); clip-path: inset(0 50% 0 0); } .ds-pass.lit .ds-stub { background: var(--alert); --text-muted: var(--alert-ink); --text-primary: var(--alert-ink); } .ds-next { display: grid; grid-template-columns: 2.5rem 1fr; gap: 0.5rem; align-items: baseline; } .ds-next > div { display: flex; flex-direction: column; gap: 0.15rem; align-items: flex-start; } .ds-act { font-family: var(--font-sans); font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); } .ds-next time { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-secondary); } .ds-next time.today { padding: 0.05rem 0.35rem; background: var(--alert); color: var(--alert-ink); border-radius: var(--radius-sm); font-weight: 700; } .ds-next time.late { color: var(--danger); font-weight: 700; } .ds-pass.lit .ds-next time.late { color: var(--alert-ink); }"
+    },
+    {
+      "name": "Departures Table",
+      "kind": "custom",
+      "refersTo": "departures-row-now",
+      "description": "Ranked next actions on ink: overdue in red, due today lit yellow with an ink TODAY chip.",
+      "html": "<div class=\"ds-dep\"><div class=\"ds-dep-head\"><span>Next actions due</span><span class=\"ds-dep-clock\">Thu, Oct 29 · 8:25 AM</span></div><table class=\"ds-dep-table\"><thead><tr><th>Date</th><th>Action</th><th>Job</th><th>Status</th></tr></thead><tbody><tr class=\"late\"><td class=\"d\">Oct 27</td><td><a href=\"#\">Review offer letter</a></td><td class=\"j\">Apex Analytics</td><td class=\"d\">Overdue 2d</td></tr><tr class=\"now\"><td class=\"d\">Oct 29</td><td><a href=\"#\">Recruiter phone screen</a></td><td class=\"j\">Starlight Robotics</td><td class=\"d\"><span class=\"ds-now\">Today</span></td></tr></tbody></table></div>",
+      "css": ".ds-dep { --focus: var(--alert); background: var(--shell-bg); color: var(--shell-text); border: 1px solid var(--shell-line); border-radius: var(--radius-md); overflow: hidden; font-family: var(--font-sans); } .ds-dep-head { display: flex; justify-content: space-between; padding: 0.65rem 1rem; background: var(--shell-raised); font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; } .ds-dep-clock { font-size: 0.75rem; font-weight: 400; letter-spacing: 0.04em; color: var(--shell-muted); } .ds-dep-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; } .ds-dep-table th { font-family: var(--font-mono); font-size: 0.6875rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--shell-muted); text-align: left; padding: 0.5rem 1rem; border-bottom: 1px solid var(--shell-line); } .ds-dep-table td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--shell-line); } .ds-dep-table tr:last-child td { border-bottom: none; } .ds-dep-table a { color: var(--shell-text); font-weight: 600; text-decoration: none; } .ds-dep-table a:hover { text-decoration: underline; } .ds-dep-table a:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; } .ds-dep-table .d { font-family: var(--font-mono); font-size: 0.8125rem; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; } .ds-dep-table .j { color: var(--shell-text); } .ds-dep-table tr.late .d { color: var(--shell-danger); } .ds-dep-table tr.now td { background: var(--alert); color: var(--alert-ink); border-bottom-color: var(--alert); } .ds-dep-table tr.now a { color: var(--alert-ink); --focus: var(--alert-ink); } .ds-now { display: inline-block; padding: 0.1rem 0.4rem; background: var(--alert-ink); color: var(--alert); border-radius: var(--radius-sm); font-weight: 700; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Gate Board",
+    "overview": "**Creative North Star: \"The Gate Board\"**\n\nThe tracker reads like an airport gate: an ink departures band answers \"what leaves next\" in one ranked, time-ordered panel, and each job below it is a printed pass that moves from gate to gate. It is dense, factual and quiet until something is due. Then one yellow light comes on. The owner uses it every day, so the system optimises for scanning speed over friendliness: monospace tabular data, uppercase tracked labels, 1px ink rules and almost no ornament.\n\nStructure comes from rules and material, not from shadows or colour blocks. The shell (header and departures band) stays ink in both themes. Everything below it sits on panel grey, with white pass surfaces in light mode and dark slate passes in dark mode. Colour carries meaning only: yellow means \"now\" (due today, active, just moved, selected text), red means overdue, and nothing else gets a hue. The world deliberately rejects the category default of soft white kanban cards under a row of stat tiles.\n\nScope: this pass restyled the board home (`/`), its departures band and the app shell that every route inherits. The other pages (job detail, list, add job, application kit/profile, settings, and the print job and prep sheets) inherit these tokens, the shell, and the base button/input/badge styles, but they have not been individually restyled into the Gate Board vernacular yet. When restyling them, extend from this document rather than from their current page-local CSS.",
+    "keyCharacteristics": [
+      "Ink shell and departures band in both themes, with panel-grey ground and white passes below",
+      "One alert yellow for \"now\"; red only for overdue",
+      "Inter Tight for reading text; JetBrains Mono for every label, date, time, count and amount",
+      "2–4px corners, 1px ink rules, dashed perforations with punched notches",
+      "A moved pass glides to its new slot and stays lit until the next interaction"
+    ],
+    "rules": [
+      {
+        "name": "The One Light Rule",
+        "body": "Departures Yellow means \"now\" and nothing else: due today, just moved, pressed, selected, focused on ink. Never use it for decoration, branding or emphasis. If two unrelated things on screen are yellow, one of them is wrong.",
+        "section": "colors"
+      },
+      {
+        "name": "The Red Is Late Rule",
+        "body": "Red appears only for overdue items and destructive actions. It never marks a stage, a category or an ordinary error-free state.",
+        "section": "colors"
+      },
+      {
+        "name": "The Ink Shell Rule",
+        "body": "The header and departures band are ink in both themes. They do not invert with the OS theme; only the ground below them does.",
+        "section": "colors"
+      },
+      {
+        "name": "The Config Colour Rule",
+        "body": "Highlight category colours come from `tracker.config.ts` and are injected at runtime as `--hl-bg` per category, always with dark text (#1e293b) on top. Never hard-code a category hue.",
+        "section": "colors"
+      },
+      {
+        "name": "The Mono Data Rule",
+        "body": "Every date, time, count, percentage, amount and column label is set in JetBrains Mono. Names, titles and sentences are never set in mono.",
+        "section": "typography"
+      },
+      {
+        "name": "The Tracked Caps Rule",
+        "body": "Mono labels are uppercase and tracked (0.12em for labels, 0.08em for buttons and tile captions, 0.04em for data). Sans text is never uppercase.",
+        "section": "typography"
+      },
+      {
+        "name": "The Rules Not Shadows Rule",
+        "body": "Structure is drawn with 1px lines: ink around passes and buttons, hairline between segments, shell line inside the band, a 2px ink rule under column heads. Do not add shadows to cards, panels or tiles.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** keep the header and departures band ink (#0b0d10 / #07080a) in both themes, and put everything else on panel grey with white passes.",
+      "**Do** reserve Departures Yellow (#ffd400) for \"now\": due today, just moved, pressed, selected, or focus on ink. Text on it is always Gate Ink.",
+      "**Do** set every date, time, count, amount and label in JetBrains Mono; uppercase and track labels at 0.12em.",
+      "**Do** draw structure with 1px rules and keep corners at 2px or 4px.",
+      "**Do** use the dashed perforation with punched notches for any pass-like object that has a body and a stub.",
+      "**Do** keep moved items lit until the next interaction, and keep the glide behind `prefers-reduced-motion`.",
+      "**Do** read stage names, highlight colours and skills from `tracker.config.ts`; never hard-code them."
+    ],
+    "donts": [
+      "**Don't** use yellow for decoration, branding accents or headings, and don't use red for anything other than overdue or destructive.",
+      "**Don't** add drop shadows to passes, panels, tiles or columns; shadows are for floating layers only.",
+      "**Don't** round corners beyond 4px or use pill-shaped chips and buttons on the board.",
+      "**Don't** fall back to soft white kanban cards under a row of generic stat tiles; that is the category default this world replaces.",
+      "**Don't** set names, titles or sentences in mono, or uppercase sans text."
+    ]
+  }
+}

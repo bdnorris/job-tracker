@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { Fragment, type JSX } from 'preact';
 import { orderForIndex } from '../lib/board/order';
 import './Board.css';
@@ -50,6 +50,41 @@ export default function Board({ stages, jobs: initialJobs }: Props) {
   // A keyboard status change moves the card to another column, which re-creates its select;
   // focus is put back on the new one.
   const [focusSelectFor, setFocusSelectFor] = useState<string | null>(null);
+  // A moved card glides from its old slot and stays lit until the next interaction elsewhere.
+  const [litId, setLitId] = useState<string | null>(null);
+  const [closedOpen, setClosedOpen] = useState(false);
+  const flipFrom = useRef<{ id: string; rect: DOMRect } | null>(null);
+
+  useLayoutEffect(() => {
+    const from = flipFrom.current;
+    if (!from) return;
+    flipFrom.current = null;
+    const el = document.querySelector<HTMLElement>(`[data-card-id="${from.id}"]`);
+    if (!el || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const to = el.getBoundingClientRect();
+    const dx = from.rect.left - to.left;
+    const dy = from.rect.top - to.top;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return;
+    el.animate(
+      [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }],
+      { duration: 460, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }
+    );
+  }, [jobs]);
+
+  useEffect(() => {
+    if (!litId) return;
+    const clear = (e: Event) => {
+      const card = (e.target as HTMLElement | null)?.closest?.('[data-card-id]') as HTMLElement | null;
+      if (card?.dataset.cardId === litId) return;
+      setLitId(null);
+    };
+    document.addEventListener('pointerdown', clear);
+    document.addEventListener('keydown', clear);
+    return () => {
+      document.removeEventListener('pointerdown', clear);
+      document.removeEventListener('keydown', clear);
+    };
+  }, [litId]);
 
   useLayoutEffect(() => {
     if (!focusSelectFor) return;
@@ -83,6 +118,9 @@ export default function Board({ stages, jobs: initialJobs }: Props) {
 
     const boardOrder = orderForIndex(siblings.map((j) => j.boardOrder), index);
     const previous = jobs;
+    const cardEl = document.querySelector<HTMLElement>(`[data-card-id="${jobId}"]`);
+    if (cardEl) flipFrom.current = { id: jobId, rect: cardEl.getBoundingClientRect() };
+    setLitId(jobId);
     setJobs((list) => list.map((j) => (j.id === jobId ? { ...j, status, boardOrder } : j)));
     setPending((p) => new Set(p).add(jobId));
 
@@ -99,6 +137,7 @@ export default function Board({ stages, jobs: initialJobs }: Props) {
           : `${job.title} moved to ${stageLabel(status)}.`
       );
     } catch {
+      setLitId(null);
       setJobs(previous);
       setAnnouncement(`Could not move ${job.title}. Change was undone.`);
     } finally {
@@ -169,72 +208,91 @@ export default function Board({ stages, jobs: initialJobs }: Props) {
 
   function renderCard(job: BoardJob) {
     const selectId = `status-${job.id}`;
+    const hasNext = !!(job.nextAction || job.nextActionDate);
     return (
       <article
         key={job.id}
-        class={`board-card${dragId === job.id ? ' is-dragging' : ''}${pending.has(job.id) ? ' is-pending' : ''}`}
+        class={`board-card${dragId === job.id ? ' is-dragging' : ''}${pending.has(job.id) ? ' is-pending' : ''}${litId === job.id ? ' is-lit' : ''}`}
         data-card-id={job.id}
         draggable
         onDragStart={(e) => onDragStart(e, job.id)}
         onDragEnd={onDragEnd}
         aria-labelledby={`title-${job.id}`}
       >
-        <div class="board-card-top">
-          <span class="drag-handle" aria-hidden="true" title="Drag to move">⋮⋮</span>
-          <div class="board-card-heading">
+        <div class="pass-main">
+          <div class="board-card-top">
+            <svg class="drag-handle" viewBox="0 0 8 14" aria-hidden="true">
+              <circle cx="2" cy="2" r="1.1" /><circle cx="6" cy="2" r="1.1" />
+              <circle cx="2" cy="7" r="1.1" /><circle cx="6" cy="7" r="1.1" />
+              <circle cx="2" cy="12" r="1.1" /><circle cx="6" cy="12" r="1.1" />
+            </svg>
             <a id={`title-${job.id}`} href={`/jobs/${job.id}`} class="board-card-title" draggable={false}>
               {job.title}
             </a>
-            <span class="board-card-company">{job.company}</span>
-          </div>
-        </div>
-
-        <div class="board-card-badges">
-          <span class="badge">{job.remoteLabel}</span>
-          {job.topSkills.length > 0 && (
-            <span class={`badge match-badge${job.matchScore >= 50 ? ' match-high' : ''}`}>
-              {job.matchScore}% match
-            </span>
-          )}
-          {job.salary && <span class="board-card-salary">{job.salary}</span>}
-        </div>
-
-        {job.topSkills.length > 0 && (
-          <ul class="board-card-skills" aria-label="Skills">
-            {job.topSkills.map((s) => (
-              <li class={`skill-tag${s.matched ? ' skill-matched' : ''}`}>{s.name}</li>
-            ))}
-          </ul>
-        )}
-
-        {(job.nextAction || job.nextActionDate) && (
-          <div class={`board-card-action${job.overdue ? ' overdue' : ''}${job.dueToday ? ' due-today' : ''}`}>
-            {job.nextAction && <span>{job.nextAction}</span>}
-            {job.nextActionLabel && (
-              <time dateTime={job.nextActionDate ?? undefined}>
-                {job.overdue ? 'Overdue · ' : job.dueToday ? 'Today · ' : ''}
-                {job.nextActionLabel}
-              </time>
+            {job.topSkills.length > 0 && (
+              <span class={`match-badge${job.matchScore >= 50 ? ' match-high' : ''}`} title="Skill match">
+                {job.matchScore}%
+              </span>
             )}
           </div>
-        )}
 
-        <div class="board-card-status no-print">
-          <label for={selectId} class="sr-only">
-            Status for {job.title}
-          </label>
-          <select
-            id={selectId}
-            class="select select-sm"
-            value={job.status}
-            // aria-disabled, not disabled: disabling the focused select would drop focus to <body>.
-            aria-disabled={pending.has(job.id) || undefined}
-            onChange={(e) => onStatusSelect(job, (e.currentTarget as HTMLSelectElement).value)}
-          >
-            {stages.map((s) => (
-              <option value={s.id}>{s.label}</option>
-            ))}
-          </select>
+          <dl class="pass-segs">
+            <div class="pass-seg pass-seg-wide">
+              <dt>From</dt>
+              <dd>{job.company}</dd>
+            </div>
+            <div class="pass-seg">
+              <dt>Pay</dt>
+              <dd class="pass-mono">{job.salary || '—'}</dd>
+            </div>
+            <div class="pass-seg">
+              <dt>Mode</dt>
+              <dd>{job.remoteLabel}</dd>
+            </div>
+          </dl>
+
+          {job.topSkills.length > 0 && (
+            <ul class="board-card-skills" aria-label="Skills">
+              {job.topSkills.map((s) => (
+                <li class={`skill-tag${s.matched ? ' skill-matched' : ''}`}>{s.name}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div class="pass-stub">
+          {hasNext && (
+            <div class={`board-card-action${job.overdue ? ' overdue' : ''}${job.dueToday ? ' due-today' : ''}`}>
+              <span class="pass-label">Next</span>
+              <div class="board-card-action-body">
+                {job.nextAction && <span class="board-card-action-text">{job.nextAction}</span>}
+                {job.nextActionLabel && (
+                  <time dateTime={job.nextActionDate ?? undefined}>
+                    {job.overdue ? 'Overdue · ' : job.dueToday ? 'Today · ' : ''}
+                    {job.nextActionLabel}
+                  </time>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div class="board-card-status no-print">
+            <label for={selectId} class="sr-only">
+              Status for {job.title}
+            </label>
+            <select
+              id={selectId}
+              class="select select-sm"
+              value={job.status}
+              // aria-disabled, not disabled: disabling the focused select would drop focus to <body>.
+              aria-disabled={pending.has(job.id) || undefined}
+              onChange={(e) => onStatusSelect(job, (e.currentTarget as HTMLSelectElement).value)}
+            >
+              {stages.map((s) => (
+                <option value={s.id}>{s.label}</option>
+              ))}
+            </select>
+          </div>
         </div>
       </article>
     );
@@ -284,16 +342,27 @@ export default function Board({ stages, jobs: initialJobs }: Props) {
 
   return (
     <div class="board">
-      <div class="board-columns">{openStages.map(renderColumn)}</div>
-
-      {closedStages.length > 0 && (
-        <details class="board-closed">
-          <summary>
-            Closed <span class="badge">{closedCount}</span>
-          </summary>
-          <div class="board-columns board-columns-closed">{closedStages.map(renderColumn)}</div>
-        </details>
-      )}
+      <div
+        class="board-columns"
+        style={{ '--cols': openStages.length + (closedOpen ? closedStages.length : 0) }}
+      >
+        {openStages.map(renderColumn)}
+        {closedOpen && closedStages.map(renderColumn)}
+        {closedStages.length > 0 && (
+          <button
+            type="button"
+            class="closed-rail"
+            aria-expanded={closedOpen}
+            onClick={() => setClosedOpen((o) => !o)}
+          >
+            <svg class="closed-rail-icon" viewBox="0 0 10 10" aria-hidden="true">
+              <path d="M6.5 1.5 3 5l3.5 3.5" />
+            </svg>
+            <span class="closed-rail-count">{closedCount}</span>
+            <span class="closed-rail-label">{closedOpen ? 'Hide closed' : 'Closed'}</span>
+          </button>
+        )}
+      </div>
 
       <div class="sr-only" role="status" aria-live="polite">
         {announcement}

@@ -1,6 +1,5 @@
 ---
 import config from '../config';
-import { formatDate, formatDateTime } from '../lib/dates';
 import { EVENT_TYPE_LABELS } from '../lib/validation/event';
 import type { getDashboardStats } from '../db/queries/jobs';
 
@@ -9,167 +8,504 @@ interface Props {
 }
 
 const { stats } = Astro.props;
+const tz = config.app.timezone;
 const openStages = config.pipeline.stages.filter((s) => !s.closed);
 const closedTotal = config.pipeline.stages
   .filter((s) => s.closed)
   .reduce((n, s) => n + (stats.countsByStage[s.id] ?? 0), 0);
+
+const DAY_MS = 86400000;
+const utcDay = (ymd: string) => {
+  const [y, m, d] = ymd.split('-').map(Number);
+  return Date.UTC(y, m - 1, d);
+};
+
+// Calendar dates (YYYY-MM-DD) are formatted in UTC so they never shift a day.
+const shortDate = (ymd: string) =>
+  new Date(utcDay(ymd)).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' });
+
+const daysLate = (ymd: string) => Math.round((utcDay(stats.today) - utcDay(ymd)) / DAY_MS);
+
+const clock = (d: Date | string) =>
+  new Date(d).toLocaleTimeString('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit' });
+const dayLabel = (d: Date | string) =>
+  new Date(d).toLocaleDateString('en-US', { timeZone: tz, weekday: 'short', month: 'short', day: 'numeric' });
+const ymdInTz = (d: Date | string) => new Date(d).toLocaleDateString('en-CA', { timeZone: tz });
+
+function untilLabel(d: Date | string) {
+  const days = Math.round((utcDay(ymdInTz(d)) - utcDay(stats.today)) / DAY_MS);
+  if (days <= 0) return 'Today';
+  if (days === 1) return 'Tomorrow';
+  return `In ${days} days`;
+}
+
+const [nextInterview, ...laterInterviews] = stats.upcomingInterviews;
+const now = new Date();
+const clockTz = (d: Date) =>
+  d.toLocaleTimeString('en-US', { timeZone: tz, hour: 'numeric', minute: '2-digit', timeZoneName: 'short' });
 ---
 
-<section class="dashboard-strip" aria-label="Dashboard">
-  <div class="strip-stats">
-    <dl class="stat-group" aria-label="Jobs per stage">
-      {openStages.map((stage) => (
-        <div class="stat">
-          <dt>{stage.label}</dt>
-          <dd>{stats.countsByStage[stage.id] ?? 0}</dd>
-        </div>
-      ))}
-      {closedTotal > 0 && (
-        <div class="stat stat-muted">
+<section class="departures" aria-label="Dashboard">
+  <div class="dep-inner">
+    <div class="dep-pipeline">
+      <h2 class="dep-heading">Pipeline</h2>
+      <dl class="dep-tiles" aria-label="Jobs per stage">
+        {openStages.map((stage) => (
+          <div class="dep-tile">
+            <dt>{stage.label}</dt>
+            <dd>{stats.countsByStage[stage.id] ?? 0}</dd>
+          </div>
+        ))}
+        <div class="dep-tile is-closed">
           <dt>Closed</dt>
           <dd>{closedTotal}</dd>
         </div>
-      )}
-    </dl>
-    <dl class="stat-group" aria-label="Recent applications">
-      <div class="stat">
-        <dt>Applied, 7 days</dt>
-        <dd>{stats.appliedLast7}</dd>
-      </div>
-      <div class="stat">
-        <dt>Applied, 30 days</dt>
-        <dd>{stats.appliedLast30}</dd>
-      </div>
-    </dl>
-  </div>
+      </dl>
+      <dl class="dep-tiles dep-window" aria-label="Recent applications">
+        <div class="dep-tile">
+          <dt>Applied, 7 days</dt>
+          <dd>{stats.appliedLast7}</dd>
+        </div>
+        <div class="dep-tile">
+          <dt>Applied, 30 days</dt>
+          <dd>{stats.appliedLast30}</dd>
+        </div>
+      </dl>
+    </div>
 
-  <div class="strip-lists">
-    <div class="strip-list">
-      <h2>Next actions due</h2>
+    <div class="dep-panel dep-actions">
+      <div class="dep-panel-head">
+        <h2 class="dep-heading">Next actions due</h2>
+        <span class="dep-count">
+          <time datetime={now.toISOString()}>{dayLabel(now)} · {clockTz(now)}</time>
+        </span>
+      </div>
       {stats.dueActions.length === 0 ? (
-        <p class="strip-empty">Nothing overdue or due today.</p>
+        <p class="dep-empty">Nothing overdue or due today.</p>
       ) : (
-        <ul>
-          {stats.dueActions.map((a) => (
-            <li class={a.overdue ? 'overdue' : ''}>
-              <a href={`/jobs/${a.id}`}>{a.nextAction || 'Next action'}</a>
-              <span class="strip-meta">
-                {a.title} · {a.company} ·{' '}
-                <time datetime={a.nextActionDate ?? undefined}>
-                  {a.overdue ? `Overdue (${formatDate(a.nextActionDate!)})` : 'Today'}
-                </time>
-              </span>
-            </li>
-          ))}
-        </ul>
+        <table class="dep-table">
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Action</th>
+              <th scope="col">Job</th>
+              <th scope="col">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {stats.dueActions.map((a) => {
+              const late = a.overdue ? daysLate(a.nextActionDate!) : 0;
+              return (
+                <tr class={a.overdue ? 'is-overdue' : 'is-now'}>
+                  <td class="dep-date">
+                    <time datetime={a.nextActionDate ?? undefined}>{shortDate(a.nextActionDate!)}</time>
+                  </td>
+                  <td class="dep-action" title={a.nextAction || undefined}>
+                    <a href={`/jobs/${a.id}`}>{a.nextAction || 'Next action'}</a>
+                  </td>
+                  <td class="dep-job" title={`${a.company} · ${a.title}`}>
+                    <span class="dep-company">{a.company}</span>
+                    <span class="dep-title">{a.title}</span>
+                  </td>
+                  <td class="dep-status">
+                    {a.overdue ? (
+                      <span>Overdue <span class="dep-late">{late}d</span></span>
+                    ) : (
+                      <span class="dep-now">Today</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       )}
     </div>
 
-    <div class="strip-list">
-      <h2>Upcoming interviews</h2>
-      {stats.upcomingInterviews.length === 0 ? (
-        <p class="strip-empty">No interviews scheduled.</p>
+    <div class="dep-panel dep-interviews">
+      <div class="dep-panel-head">
+        <h2 class="dep-heading">Upcoming interviews</h2>
+        <span class="dep-count">{stats.upcomingInterviews.length}</span>
+      </div>
+      {!nextInterview ? (
+        <p class="dep-empty">No interviews scheduled.</p>
       ) : (
-        <ul>
-          {stats.upcomingInterviews.map((e) => (
-            <li>
-              <a href={`/jobs/${e.jobId}#event-${e.id}`}>{e.title}</a>
-              <span class="strip-meta">
-                {EVENT_TYPE_LABELS[e.type]} · {e.jobTitle} · {e.company} ·{' '}
-                <time datetime={new Date(e.occurredAt).toISOString()}>{formatDateTime(e.occurredAt)}</time>
-              </span>
-            </li>
-          ))}
-        </ul>
+        <div class="dep-next">
+          <p class="dep-clock">
+            <time datetime={new Date(nextInterview.occurredAt).toISOString()}>
+              <span class="dep-clock-time">{clock(nextInterview.occurredAt)}</span>
+              <span class="dep-clock-day">{dayLabel(nextInterview.occurredAt)}</span>
+            </time>
+          </p>
+          <a class="dep-next-title" href={`/jobs/${nextInterview.jobId}#event-${nextInterview.id}`}>
+            {nextInterview.title}
+          </a>
+          <p class="dep-next-job">{nextInterview.company} · {nextInterview.jobTitle}</p>
+          <p class="dep-next-meta">
+            <span>{EVENT_TYPE_LABELS[nextInterview.type]}</span>
+            <span>{untilLabel(nextInterview.occurredAt)}</span>
+          </p>
+          {laterInterviews.length > 0 && (
+            <ul class="dep-later">
+              {laterInterviews.map((e) => (
+                <li>
+                  <time datetime={new Date(e.occurredAt).toISOString()}>{dayLabel(e.occurredAt)}</time>
+                  <a href={`/jobs/${e.jobId}#event-${e.id}`}>{e.title}</a>
+                  <span>{e.company}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
     </div>
   </div>
 </section>
 
 <style>
-  .dashboard-strip {
+  .departures {
+    --focus: var(--alert);
+    background-color: var(--shell-bg);
+    color: var(--shell-text);
+    border-bottom: 1px solid var(--shell-line);
+  }
+  .departures a {
+    color: var(--shell-text);
+  }
+  .dep-inner {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 1.25rem 1.5rem 1.5rem;
+    display: grid;
+    grid-template-columns: minmax(0, 23rem) minmax(0, 1fr) minmax(260px, 22rem);
+    grid-template-areas: "pipeline actions interviews";
+    gap: 1rem 1.25rem;
+    align-items: start;
+  }
+  .dep-pipeline {
+    grid-area: pipeline;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    background-color: var(--bg-surface);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-lg);
-    padding: 1rem 1.25rem;
   }
-  .strip-stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem 2rem;
+  .dep-pipeline .dep-heading {
+    grid-column: 1 / -1;
   }
-  .stat-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem;
+  .dep-actions {
+    grid-area: actions;
   }
-  .stat-group + .stat-group {
-    padding-left: 2rem;
-    border-left: 1px solid var(--border-subtle);
+  .dep-interviews {
+    grid-area: interviews;
   }
-  .stat {
+  .dep-heading {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: var(--label-tracking);
+    text-transform: uppercase;
+    color: var(--shell-text);
+  }
+
+  /* Pipeline tiles */
+  .dep-tiles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1px;
+    background-color: var(--shell-line);
+    border: 1px solid var(--shell-line);
+    margin-top: 0.75rem;
+  }
+  .dep-tile {
+    background-color: var(--shell-bg);
+    padding: 0.7rem 0.85rem 0.8rem;
     display: flex;
     flex-direction: column-reverse;
+    gap: 0.35rem;
+    min-width: 0;
   }
-  .stat dt {
+  .dep-tile dt {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--shell-muted);
+  }
+  .dep-tile dd {
+    font-family: var(--font-mono);
+    font-size: 2.75rem;
+    font-weight: 500;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+  }
+  .dep-tile.is-closed dd {
+    color: var(--shell-muted);
+  }
+  .dep-window {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 0.5rem;
+  }
+  .dep-window .dep-tile dd {
+    font-size: 1.75rem;
+    color: var(--shell-muted);
+  }
+
+  /* Panels */
+  .dep-panel {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--shell-line);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    min-width: 0;
+  }
+  .dep-panel-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.65rem 1rem;
+    background-color: var(--shell-raised);
+  }
+  .dep-count {
+    font-family: var(--font-mono);
     font-size: 0.75rem;
-    color: var(--text-muted);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--shell-muted);
   }
-  .stat dd {
-    font-size: 1.375rem;
+  .dep-empty {
+    padding: 1.1rem 1rem;
+    color: var(--shell-muted);
+    font-size: 0.875rem;
+  }
+
+  /* Departures table */
+  .dep-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+  .dep-table th:nth-child(1) {
+    width: 6rem;
+  }
+  .dep-table th:nth-child(2) {
+    width: 42%;
+  }
+  .dep-table th:nth-child(4) {
+    width: 7.75rem;
+  }
+  /* One line per departure; the full text stays in the link and title. */
+  .dep-action,
+  .dep-job {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .dep-table th {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: var(--label-tracking);
+    text-transform: uppercase;
+    color: var(--shell-muted);
+    text-align: left;
+    padding: 0.5rem 1rem;
+    border-bottom: 1px solid var(--shell-line);
+  }
+  .dep-table td {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--shell-line);
+    vertical-align: baseline;
+  }
+  .dep-table tr:last-child td {
+    border-bottom: none;
+  }
+  .dep-date,
+  .dep-status {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .dep-date {
+    width: 6.5rem;
+  }
+  .dep-status {
+    width: 9rem;
+  }
+  .dep-action a {
+    font-weight: 600;
+  }
+  .dep-job {
+    color: var(--shell-muted);
+  }
+  .dep-company {
+    color: var(--shell-text);
+  }
+  .dep-title::before {
+    content: " · ";
+  }
+  .dep-late {
+    margin-left: 0.25rem;
+    opacity: 0.85;
+  }
+  .is-overdue .dep-date,
+  .is-overdue .dep-status {
+    color: var(--shell-danger);
+  }
+  /* Due today: the lit row. */
+  .is-now td {
+    background-color: var(--alert);
+    color: var(--alert-ink);
+    border-bottom-color: var(--alert);
+  }
+  .is-now a,
+  .is-now .dep-company,
+  .is-now .dep-job {
+    color: var(--alert-ink);
+  }
+  .is-now {
+    --focus: var(--alert-ink);
+  }
+  .dep-now {
+    display: inline-block;
+    padding: 0.1rem 0.4rem;
+    background-color: var(--alert-ink);
+    color: var(--alert);
+    border-radius: var(--radius-sm);
     font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    line-height: 1.2;
   }
-  .stat-muted dd {
-    color: var(--text-secondary);
-  }
-  .strip-lists {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem 2rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid var(--border-subtle);
-  }
-  .strip-list h2 {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    margin-bottom: 0.4rem;
-  }
-  .strip-list ul {
-    list-style: none;
+
+  /* Next interview: the clock reads first. */
+  .dep-next {
+    padding: 1rem;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 0.35rem;
   }
-  .strip-list li {
+  .dep-clock time {
     display: flex;
-    flex-direction: column;
-    font-size: 0.85rem;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.6rem;
   }
-  .strip-list li.overdue time {
-    color: var(--danger);
-    font-weight: 600;
+  .dep-clock-time {
+    font-family: var(--font-mono);
+    font-size: 3.5rem;
+    font-weight: 500;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
   }
-  .strip-meta {
+  .dep-clock-day {
+    font-family: var(--font-mono);
     font-size: 0.75rem;
-    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--shell-muted);
   }
-  .strip-empty {
-    font-size: 0.8rem;
-    color: var(--text-muted);
+  .dep-next-title {
+    margin-top: 0.4rem;
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.25;
   }
-  @media (max-width: 768px) {
-    .strip-lists {
-      grid-template-columns: 1fr;
+  .dep-next-job {
+    color: var(--shell-muted);
+    font-size: 0.875rem;
+  }
+  .dep-next-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    padding-top: 0.6rem;
+    border-top: 1px dashed var(--shell-line);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--shell-muted);
+  }
+  .dep-later {
+    list-style: none;
+    margin-top: 0.5rem;
+    display: flex;
+    flex-direction: column;
+  }
+  .dep-later li {
+    display: grid;
+    grid-template-columns: 6.5rem 1fr;
+    gap: 0 0.75rem;
+    padding: 0.45rem 0;
+    border-top: 1px solid var(--shell-line);
+    font-size: 0.8125rem;
+  }
+  .dep-later time {
+    grid-row: span 2;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--shell-muted);
+  }
+  .dep-later span {
+    color: var(--shell-muted);
+  }
+
+  @media (max-width: 960px) {
+    .dep-inner {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: "pipeline" "actions" "interviews";
     }
-    .stat-group + .stat-group {
-      padding-left: 0;
-      border-left: none;
+  }
+  @media (max-width: 720px) {
+    .dep-inner {
+      padding: 1rem;
+      gap: 1rem;
+    }
+    .dep-table thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+    }
+    .dep-table tr {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.15rem 0.75rem;
+      padding: 0.65rem 1rem;
+      border-bottom: 1px solid var(--shell-line);
+    }
+    .dep-table tr:last-child {
+      border-bottom: none;
+    }
+    .dep-table tr.is-now {
+      background-color: var(--alert);
+    }
+    .dep-table td {
+      padding: 0;
+      border: none;
+      width: auto;
+    }
+    .dep-action,
+    .dep-job {
+      white-space: normal;
+    }
+    .dep-action,
+    .dep-job {
+      grid-column: 1 / -1;
+    }
+    .dep-action {
+      order: 3;
+    }
+    .dep-job {
+      order: 4;
+    }
+    .dep-status {
+      text-align: right;
     }
   }
 </style>

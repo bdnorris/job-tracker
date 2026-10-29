@@ -1,88 +1,123 @@
+/*
+  Gate Board: ink shell and departures panel, grey panel ground, white passes.
+  One alert yellow is reserved for "now" (due today, selected, active). Red is reserved for overdue.
+*/
 :root {
-  /* Color palette - Light mode */
-  --bg-primary: #f8fafc;
+  color-scheme: light dark;
+
+  /* Ground and surfaces - light */
+  --bg-primary: #e6e8eb;
   --bg-surface: #ffffff;
   --bg-surface-elevated: #ffffff;
-  --bg-subtle: #f1f5f9;
-  --border-subtle: #e2e8f0;
-  --border-strong: #cbd5e1;
+  --bg-subtle: #f1f2f4;
+  --border-subtle: #cdd1d6;
+  --border-strong: #868d96;
+  --rule: #0b0d10;
 
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
+  --text-primary: #0b0d10;
+  --text-secondary: #3a4048;
+  --text-muted: #565d66;
   --text-inverse: #ffffff;
 
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-subtle: #eff6ff;
-  --primary-border: #bfdbfe;
+  /* "Primary" in this world is ink, not a brand hue. */
+  --primary: #0b0d10;
+  --primary-hover: #2b3038;
+  --primary-subtle: #fff6cc;
+  --primary-border: #0b0d10;
 
-  --danger: #dc2626;
-  --danger-hover: #b91c1c;
-  --danger-subtle: #fef2f2;
-  --danger-border: #fecaca;
+  --alert: #ffd400;
+  --alert-ink: #0b0d10;
+  --alert-subtle: #fff6cc;
 
-  --warning: #d97706;
-  --warning-subtle: #fffbeb;
-  --success: #16a34a;
-  --success-subtle: #f0fdf4;
+  --danger: #c0271a;
+  --danger-hover: #9c1f14;
+  --danger-subtle: #fdecea;
+  --danger-border: #ef9a92;
+
+  --warning: #8a5a00;
+  --warning-subtle: #fff6cc;
+  --success: #1c6e36;
+  --success-subtle: #e4f2e8;
+
+  --focus: #0b0d10;
+  --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%230b0d10' stroke-width='1.6'/%3E%3C/svg%3E");
+
+  /* Shell: header and departures band stay ink in both themes */
+  --shell-bg: #0b0d10;
+  --shell-raised: #1c2127;
+  --shell-line: #2e343c;
+  --shell-text: #f4f5f6;
+  --shell-muted: #a6acb4;
+  --shell-danger: #ff7b6e;
 
   /* Highlight category colors are generated from tracker.config.ts in Layout.astro */
-
   --hl-text-dark: #1e293b;
 
   /* Typography */
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-sans: "Inter Tight Variable", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --label-tracking: 0.12em;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  /* Depth: rules carry structure; shadows are only for floating layers */
+  --shadow-sm: 0 1px 2px 0 rgb(11 13 16 / 0.06);
+  --shadow-md: 0 4px 10px -2px rgb(11 13 16 / 0.14);
+  --shadow-lg: 0 12px 28px -6px rgb(11 13 16 / 0.28);
 
   /* Radii */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
   --radius-full: 9999px;
 
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
   /* Layout */
-  --max-width: 1440px;
-  --header-height: 56px;
+  --max-width: 1520px;
+  --header-height: 52px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg-primary: #0f172a;
-    --bg-surface: #1e293b;
-    --bg-surface-elevated: #334155;
-    --bg-subtle: #1e293b;
-    --border-subtle: #334155;
-    --border-strong: #475569;
+    --bg-primary: #121519;
+    --bg-surface: #1b1f25;
+    --bg-surface-elevated: #252a31;
+    --bg-subtle: #161a1f;
+    --border-subtle: #2f353d;
+    --border-strong: #59606a;
+    --rule: #c9ced4;
 
-    --text-primary: #f8fafc;
-    --text-secondary: #cbd5e1;
-    --text-muted: #94a3b8;
-    --text-inverse: #0f172a;
+    --text-primary: #eef0f2;
+    --text-secondary: #bcc1c8;
+    --text-muted: #949ba4;
+    --text-inverse: #0b0d10;
 
-    --primary: #3b82f6;
-    --primary-hover: #60a5fa;
-    --primary-subtle: #1e3a8a44;
-    --primary-border: #1d4ed8;
+    --primary: #eef0f2;
+    --primary-hover: #ffffff;
+    --primary-subtle: #3a3206;
+    --primary-border: #eef0f2;
 
-    --danger: #ef4444;
-    --danger-hover: #f87171;
-    --danger-subtle: #450a0a44;
-    --danger-border: #991b1b;
+    --alert-subtle: #3a3206;
 
-    --warning: #f59e0b;
-    --warning-subtle: #78350f33;
-    --success: #22c55e;
-    --success-subtle: #14532d33;
+    --danger: #ff7b6e;
+    --danger-hover: #ff9a90;
+    --danger-subtle: #3b1512;
+    --danger-border: #8a2a22;
 
+    --warning: #ffd400;
+    --warning-subtle: #3a3206;
+    --success: #5fcf86;
+    --success-subtle: #12301d;
+
+    --focus: #ffd400;
+    --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%23eef0f2' stroke-width='1.6'/%3E%3C/svg%3E");
+
+    --shell-bg: #07080a;
+    --shell-raised: #16191e;
+    --shell-line: #262b32;
 
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+    --shadow-md: 0 4px 10px -2px rgb(0 0 0 / 0.5);
+    --shadow-lg: 0 12px 28px -6px rgb(0 0 0 / 0.6);
   }
 }

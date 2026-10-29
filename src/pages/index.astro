@@ -42,19 +42,16 @@ const activeCount = boardJobs.filter(
 ---
 
 <Layout title="Board">
+  <DashboardStrip slot="band" stats={stats} />
+
   <div class="board-page">
     <div class="board-header">
-      <div>
-        <h1>Job Pipeline</h1>
-        <p class="subtitle">{activeCount} active job{activeCount === 1 ? '' : 's'}</p>
-      </div>
+      <h1>Board <span class="board-active">{activeCount} active</span></h1>
       <div class="header-actions">
         <a href="/jobs" class="btn">List view</a>
-        <a href="/jobs/new" class="btn btn-primary">+ Add Job</a>
+        <a href="/jobs/new" class="btn btn-primary">Add Job</a>
       </div>
     </div>
-
-    <DashboardStrip stats={stats} />
 
     <Board client:load stages={config.pipeline.stages} jobs={boardJobs} />
   </div>
@@ -64,7 +61,7 @@ const activeCount = boardJobs.filter(
   .board-page {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1rem;
   }
   .board-header {
     display: flex;
@@ -74,13 +71,20 @@ const activeCount = boardJobs.filter(
     gap: 0.75rem;
   }
   .board-header h1 {
-    font-size: 1.75rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    font-size: 1.375rem;
     font-weight: 700;
+    letter-spacing: -0.02em;
   }
-  .subtitle {
+  .board-active {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     color: var(--text-muted);
-    font-size: 0.875rem;
-    margin-top: 0.25rem;
   }
   .header-actions {
     display: flex;

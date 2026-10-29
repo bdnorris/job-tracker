@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Job Tracker - Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#111418;--ink2:#2b3038;--paper:#f4f4f0;--amber:#ffb000;--red:#d92d20;--mute:#9aa1ab;--line:#d6d6cf;--mono:'JetBrains Mono',ui-monospace,monospace}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:1440px;height:900px;overflow:hidden;background:var(--paper);color:var(--ink);font:400 13px/1.3 'Inter Tight',system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.mono{font-family:var(--mono)}
+header{height:52px;background:var(--ink);color:var(--paper);display:flex;align-items:center;padding:0 24px;border-bottom:1px solid var(--ink2)}
+.brand{font-weight:700;font-size:16px;letter-spacing:.01em;margin-right:auto;display:flex;align-items:center;gap:10px}
+.brand i{width:10px;height:18px;background:var(--paper);display:block;border-radius:1px}
+nav{display:flex;gap:4px}
+nav a{color:#b9bec6;text-decoration:none;font-weight:500;padding:8px 12px;border-radius:4px}
+nav a.on{color:var(--ink);background:var(--paper)}
+nav a.add{color:var(--paper);border:1px solid #4a515c;margin:0 8px}
+.dash{background:var(--ink);color:var(--paper);height:318px;padding:16px 24px 20px;display:grid;grid-template-columns:372px 1fr 330px;gap:20px}
+.lbl{font:500 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.counts{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--ink2);border:1px solid var(--ink2);margin-top:10px}
+.counts div{background:var(--ink);padding:12px 14px}
+.counts b{display:block;font:500 30px/1 var(--mono);margin-top:8px}
+.counts div.cur b{color:var(--paper)}
+.win{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--ink2);border:1px solid var(--ink2);margin-top:12px}
+.win div{background:var(--ink);padding:10px 14px;display:flex;justify-content:space-between;align-items:baseline}
+.win b{font:500 20px/1 var(--mono)}
+.panel{background:var(--ink);border:1px solid var(--ink2);display:flex;flex-direction:column}
+.ph{display:flex;justify-content:space-between;align-items:center;padding:11px 14px;background:var(--ink2)}
+.ph span:last-child{font:400 11px var(--mono);color:#b9bec6}
+.row{display:grid;grid-template-columns:92px 1fr 158px 104px;gap:12px;align-items:center;padding:0 14px;height:44px;border-bottom:1px solid var(--ink2);font-size:13px}
+.row.h{height:28px;font:500 10px var(--mono);letter-spacing:.14em;color:var(--mute);background:#0c0e11}
+.row .t{font:500 12px var(--mono);color:#d9dce1}
+.row .a{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .j{color:#b9bec6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .s{font:700 11px var(--mono);letter-spacing:.08em;display:flex;gap:6px;align-items:center}
+.row.od .s,.row.od .t{color:#ff6b5e}
+.row.lit{background:var(--amber);color:var(--ink);border-bottom-color:var(--amber)}
+.row.lit .t,.row.lit .j,.row.lit .s{color:var(--ink)}
+.tag{font:700 9px var(--mono);letter-spacing:.1em;background:var(--ink);color:var(--amber);padding:3px 5px;border-radius:2px}
+.iv{grid-template-columns:84px 1fr 70px}
+.ivbox{padding:14px;display:flex;flex-direction:column;gap:6px}
+.ivbox .big{font:500 30px/1 var(--mono);color:var(--paper)}
+.ivbox .big small{font-size:13px;color:var(--mute);margin-left:6px}
+.ivbox h4{font:600 15px/1.2 'Inter Tight'}
+.ivbox p{color:#b9bec6}
+.ivbox .in{margin-top:auto;font:500 11px var(--mono);color:var(--mute);border-top:1px dashed #4a515c;padding-top:10px;display:flex;justify-content:space-between}
+.board{padding:16px 24px 0;display:grid;grid-template-columns:repeat(5,1fr) 64px;gap:12px;height:530px}
+.col h2{display:flex;justify-content:space-between;align-items:baseline;font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;padding-bottom:8px;border-bottom:2px solid var(--ink);margin-bottom:10px}
+.col h2 span{font-weight:500;color:var(--mute)}
+.card{background:#fff;border:1px solid var(--ink);border-radius:4px;overflow:hidden;position:relative}
+.card.chg{box-shadow:inset 4px 0 0 var(--amber)}
+.seg{padding:8px 12px 8px 14px;display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:baseline}
+.seg .lbl{font-size:9px;color:#555c66}
+.seg b{font-weight:600;font-size:14px;line-height:1.2}
+.seg .mono{font-size:12px;font-weight:500}
+.seg + .seg{border-top:1px solid #ececE6}
+.perf{border-top:2px dashed var(--ink);position:relative;margin:0}
+.perf:before,.perf:after{content:"";position:absolute;top:-7px;width:12px;height:12px;border-radius:50%;background:var(--paper);border:1px solid var(--ink)}
+.perf:before{left:-7px}.perf:after{right:-7px}
+.stub{background:#f0f0ea;padding:8px 12px 10px 14px}
+.next{display:grid;grid-template-columns:44px 1fr;gap:8px;align-items:baseline}
+.next .lbl{font-size:9px;color:#555c66}
+.next b{font-weight:600;font-size:12.5px;display:block}
+.next .d{font:500 11px var(--mono);color:#3a4048}
+.next.od .d,.next.od b{color:var(--red)}
+.next.td .d{color:var(--ink);background:var(--amber);padding:1px 4px;border-radius:2px}
+.meta{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.sk{display:flex;gap:4px;flex-wrap:wrap}
+.sk span{font:500 10px var(--mono);border:1px solid #b8b8b0;padding:2px 5px;border-radius:2px;background:#fff}
+.m{font:700 12px var(--mono);background:var(--ink);color:var(--paper);padding:3px 6px;border-radius:2px}
+select{width:100%;margin-top:8px;font:500 12px 'Inter Tight';padding:6px 8px;border:1px solid #9aa0a8;border-radius:4px;background:#fff;color:var(--ink)}
+.closed{border:1px solid var(--ink);border-radius:4px;background:var(--ink);color:var(--paper);height:100%;max-height:380px;display:flex;flex-direction:column;align-items:center;padding:12px 0;gap:14px}
+.closed .v{writing-mode:vertical-rl;font:600 11px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.closed b{font:500 20px var(--mono)}
+</style></head><body>
+<header>
+ <div class="brand"><i></i>Job Tracker</div>
+ <nav><a class="on" href="#">Board</a><a href="#">List</a><a class="add" href="#">+ Add Job</a><a href="#">App Kit</a><a href="#">Settings</a><a href="#">Sign Out</a></nav>
+</header>
+<section class="dash">
+ <div>
+  <div class="lbl">Pipeline</div>
+  <div class="counts">
+   <div><span class="lbl">Saved</span><b>1</b></div><div><span class="lbl">Applied</span><b>1</b></div><div><span class="lbl">Screening</span><b>1</b></div>
+   <div><span class="lbl">Interviewing</span><b>1</b></div><div><span class="lbl">Offer</span><b>1</b></div><div><span class="lbl">Closed</span><b>2</b></div>
+  </div>
+  <div class="win"><div><span class="lbl">Applied, 7 days</span><b>2</b></div><div><span class="lbl">Applied, 30 days</span><b>5</b></div></div>
+ </div>
+ <div class="panel">
+  <div class="ph"><span class="lbl" style="color:var(--paper)">Next actions due</span><span>Wed 28 Oct 2026</span></div>
+  <div class="row h"><span>DATE</span><span>ACTION</span><span>JOB</span><span>STATUS</span></div>
+  <div class="row od"><span class="t">OCT 27</span><span class="a">Review offer letter and benefits</span><span class="j">Apex Analytics</span><span class="s">OVERDUE</span></div>
+  <div class="row lit"><span class="t">OCT 28</span><span class="a">Recruiter phone screen</span><span class="j">Starlight Robotics</span><span class="s">TODAY <span class="tag">CHANGED</span></span></div>
+  <div class="row"><span class="t">OCT 29</span><span class="a">Tailor resume for posting</span><span class="j">Initech Labs</span><span class="s">TOMORROW</span></div>
+  <div class="row"><span class="t">OCT 30</span><span class="a">Prep for System Design panel</span><span class="j">Acme Cloud Systems</span><span class="s">THU</span></div>
+  <div class="row" style="border:0"><span class="t">NOV 01</span><span class="a">Follow up if no reply</span><span class="j">Globex Software</span><span class="s">SUN</span></div>
+ </div>
+ <div class="panel">
+  <div class="ph"><span class="lbl" style="color:var(--paper)">Upcoming interviews</span><span>1</span></div>
+  <div class="ivbox">
+   <div class="big">14:00<small>THU OCT 30</small></div>
+   <h4>System Design panel</h4>
+   <p>Acme Cloud Systems &middot; Senior Frontend Engineer</p>
+   <div class="in"><span>IN 2 DAYS</span><span>REMOTE</span></div>
+  </div>
+ </div>
+</section>
+<main class="board">
+ <section class="col"><h2>Saved <span>1</span></h2>
+  <div class="card">
+   <div class="seg"><span class="lbl">Role</span><b>Backend Services Engineer</b></div>
+   <div class="seg"><span class="lbl">From</span><span>Initech Labs</span></div>
+   <div class="seg"><span class="lbl">Pay</span><span class="mono">$115k&ndash;$140k &middot; Remote</span></div>
+   <div class="perf"></div>
+   <div class="stub"><div class="next"><span class="lbl">Next</span><div><b>Tailor resume for posting</b><span class="d">TOMORROW &middot; OCT 29</span></div></div>
+    <div class="meta"><div class="sk"><span>TypeScript</span><span>Node</span><span>Postgres</span></div><span class="m">78%</span></div>
+    <select><option>Saved</option><option>Applied</option></select></div>
+  </div></section>
+ <section class="col"><h2>Applied <span>1</span></h2>
+  <div class="card">
+   <div class="seg"><span class="lbl">Role</span><b>UI Platform Engineer</b></div>
+   <div class="seg"><span class="lbl">From</span><span>Globex Software</span></div>
+   <div class="seg"><span class="lbl">Pay</span><span class="mono">$130k&ndash;$160k &middot; Onsite, New York</span></div>
+   <div class="perf"></div>
+   <div class="stub"><div class="next"><span class="lbl">Next</span><div><b>Follow up if no reply</b><span class="d">NOV 1</span></div></div>
+    <div class="meta"><div class="sk"><span>React</span><span>TypeScript</span><span>Astro</span></div><span class="m">84%</span></div>
+    <select><option>Applied</option><option>Screening</option></select></div>
+  </div></section>
+ <section class="col"><h2>Screening <span>1</span></h2>
+  <div class="card chg">
+   <div class="seg"><span class="lbl">Role</span><b>Full Stack Developer</b></div>
+   <div class="seg"><span class="lbl">From</span><span>Starlight Robotics</span></div>
+   <div class="seg"><span class="lbl">Pay</span><span class="mono">$125k&ndash;$150k &middot; Hybrid, Chicago</span></div>
+   <div class="perf"></div>
+   <div class="stub"><div class="next td"><span class="lbl">Next</span><div><b>Recruiter phone screen</b><span class="d">TODAY &middot; OCT 28</span></div></div>
+    <div class="meta"><div class="sk"><span>React</span><span>TypeScript</span><span>Node</span></div><span class="m">81%</span></div>
+    <select><option>Screening</option><option>Interviewing</option></select></div>
+  </div></section>
+ <section class="col"><h2>Interviewing <span>1</span></h2>
+  <div class="card">
+   <div class="seg"><span class="lbl">Role</span><b>Senior Frontend Engineer</b></div>
+   <div class="seg"><span class="lbl">From</span><span>Acme Cloud Systems</span></div>
+   <div class="seg"><span class="lbl">Pay</span><span class="mono">$140k&ndash;$175k &middot; Remote</span></div>
+   <div class="perf"></div>
+   <div class="stub"><div class="next"><span class="lbl">Next</span><div><b>Prep for System Design panel</b><span class="d">OCT 30</span></div></div>
+    <div class="meta"><div class="sk"><span>React</span><span>TypeScript</span><span>Astro</span></div><span class="m">92%</span></div>
+    <select><option>Interviewing</option><option>Offer</option></select></div>
+  </div></section>
+ <section class="col"><h2>Offer <span>1</span></h2>
+  <div class="card">
+   <div class="seg"><span class="lbl">Role</span><b>Staff Software Architect</b></div>
+   <div class="seg"><span class="lbl">From</span><span>Apex Analytics</span></div>
+   <div class="seg"><span class="lbl">Pay</span><span class="mono">$180k&ndash;$220k &middot; Remote</span></div>
+   <div class="perf"></div>
+   <div class="stub"><div class="next od"><span class="lbl">Next</span><div><b>Review offer letter and benefits</b><span class="d">OVERDUE &middot; OCT 27</span></div></div>
+    <div class="meta"><div class="sk"><span>TypeScript</span><span>React</span><span>AWS</span></div><span class="m">88%</span></div>
+    <select><option>Offer</option><option>Closed</option></select></div>
+  </div></section>
+ <div class="closed"><span class="lbl" style="color:var(--mute)">&#9656;</span><b>2</b><span class="v">Closed</span></div>
+</main>
+</body></html>
