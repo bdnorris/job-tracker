@@ -1,4 +1,5 @@
 ---
+import Icon from '../Icon.astro';
 interface Props {
   jobId: string;
   other: { href: string; label: string };
@@ -7,7 +8,7 @@ const { jobId, other } = Astro.props;
 ---
 
 <div class="sheet-toolbar no-print">
-  <a href={`/jobs/${jobId}`} class="btn btn-sm">← Back to job</a>
+  <a href={`/jobs/${jobId}`} class="btn btn-sm"><Icon name="arrow-left" /> Back to job</a>
   <a href={other.href} class="btn btn-sm">{other.label}</a>
   <button type="button" class="btn btn-sm btn-primary" data-print>Print</button>
 </div>

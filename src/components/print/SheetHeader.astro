@@ -65,11 +65,12 @@ const subtitle = [job.company, job.location, REMOTE_LABELS[job.remoteType] !== '
     font-size: 0.75rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    font-family: var(--font-mono);
+    letter-spacing: var(--label-tracking);
     color: var(--text-muted);
   }
   h1 {
-    font-size: 1.6rem;
+    font-size: 1.75rem;
     line-height: 1.2;
   }
   .sheet-subtitle {
@@ -84,10 +85,11 @@ const subtitle = [job.company, job.location, REMOTE_LABELS[job.remoteType] !== '
     font-size: 0.875rem;
   }
   .sheet-meta dt {
-    font-size: 0.7rem;
+    font-size: 0.6875rem;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    font-family: var(--font-mono);
+    letter-spacing: var(--label-tracking);
     color: var(--text-muted);
   }
   .sheet-meta dd {

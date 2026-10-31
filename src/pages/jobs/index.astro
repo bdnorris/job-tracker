@@ -1,5 +1,6 @@
 ---
 import Layout from '../../layouts/Layout.astro';
+import Icon from '../../components/Icon.astro';
 import config from '../../config';
 import { listJobs, listSkillNames } from '../../db/queries/jobs';
 import { computeMatchScore } from '../../lib/skills/match';
@@ -18,6 +19,7 @@ const includeArchived = url.searchParams.get('includeArchived') === 'true';
 const { sort, dir } = parseSort(url.searchParams.get('sort'), url.searchParams.get('dir'));
 
 const today = todayInTz();
+const closedStageIds = new Set(config.pipeline.stages.filter((s) => s.closed).map((s) => s.id));
 const salaryMin = salaryMinStr ? parseInt(salaryMinStr, 10) : undefined;
 
 const [rows, skillNames] = await Promise.all([
@@ -73,7 +75,7 @@ const columns: { key: SortKey; label: string }[] = [
         <h1>All Jobs</h1>
         <p class="subtitle">Showing {jobs.length} job{jobs.length === 1 ? '' : 's'}</p>
       </div>
-      <a href="/jobs/new" class="btn btn-primary">+ Add Job</a>
+      <a href="/jobs/new" class="btn btn-primary"><Icon name="plus" /> Add Job</a>
     </div>
 
     <!-- Filters Bar -->
@@ -162,7 +164,7 @@ const columns: { key: SortKey; label: string }[] = [
     {jobs.length === 0 ? (
       <div class="card empty-container">
         <p>No jobs found matching your filters.</p>
-        <a href="/jobs/new" class="btn btn-primary btn-sm">+ Add Your First Job</a>
+        <a href="/jobs/new" class="btn btn-primary btn-sm"><Icon name="plus" /> Add your first job</a>
       </div>
     ) : (
       <div class="card table-container">
@@ -175,7 +177,7 @@ const columns: { key: SortKey; label: string }[] = [
                     <a href={sortHref(col.key)} class={`sort-link ${sort === col.key ? 'is-sorted' : ''}`}>
                       {col.label}
                       <span class="sort-indicator" aria-hidden="true">
-                        {sort === col.key ? (dir === 'asc' ? '▲' : '▼') : ''}
+                        {sort === col.key && <Icon name={dir === 'asc' ? 'sort-asc' : 'sort-desc'} />}
                       </span>
                     </a>
                   </th>
@@ -199,11 +201,11 @@ const columns: { key: SortKey; label: string }[] = [
                         {job.title}
                       </a>
                       <span class="company-sub">{job.company}</span>
-                      {job.location && <span class="location-sub">📍 {job.location}</span>}
+                      {job.location && <span class="location-sub">{job.location}</span>}
                     </div>
                   </td>
                   <td>
-                    <span class="badge stage-badge">
+                    <span class:list={['badge stage-badge', { 'is-closed': closedStageIds.has(job.status) }]}>
                       {stagesMap.get(job.status) || job.status}
                     </span>
                   </td>
@@ -261,7 +263,8 @@ const columns: { key: SortKey; label: string }[] = [
     align-items: center;
   }
   .header-row h1 {
-    font-size: 1.75rem;
+    font-size: 1.375rem;
+    letter-spacing: -0.02em;
     font-weight: 700;
   }
   .subtitle {
@@ -291,6 +294,8 @@ const columns: { key: SortKey; label: string }[] = [
     font-weight: 600;
     color: var(--text-secondary);
     text-transform: uppercase;
+    font-family: var(--font-mono);
+    letter-spacing: var(--label-tracking);
   }
   .filter-checkboxes {
     display: flex;
@@ -331,9 +336,11 @@ const columns: { key: SortKey; label: string }[] = [
   .jobs-table th {
     padding: 0.75rem 1rem;
     background-color: var(--bg-subtle);
-    border-bottom: 1px solid var(--border-subtle);
+    border-bottom: 2px solid var(--rule);
     font-size: 0.75rem;
     text-transform: uppercase;
+    font-family: var(--font-mono);
+    letter-spacing: var(--label-tracking);
     color: var(--text-muted);
     font-weight: 600;
   }
@@ -361,24 +368,35 @@ const columns: { key: SortKey; label: string }[] = [
     color: var(--text-primary);
   }
   .company-sub {
-    font-size: 0.8rem;
+    font-size: 0.8125rem;
     color: var(--text-secondary);
   }
   .location-sub {
     font-size: 0.75rem;
     color: var(--text-muted);
   }
+  /* Stage reads as a column head in miniature: ink outline, never the "now" yellow. */
   .stage-badge {
-    background-color: var(--primary-subtle);
-    color: var(--primary);
+    background: none;
+    border-color: var(--rule);
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .stage-badge.is-closed {
+    border-color: var(--border-strong);
+    color: var(--text-muted);
   }
   .match-badge {
-    background-color: var(--bg-subtle);
+    font-weight: 700;
+    background: none;
+    border-color: var(--border-strong);
     color: var(--text-secondary);
   }
   .match-high {
-    background-color: var(--success-subtle);
-    color: var(--success);
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: var(--text-inverse);
   }
   .next-action-cell {
     display: flex;
@@ -396,6 +414,7 @@ const columns: { key: SortKey; label: string }[] = [
   }
   .sort-link {
     color: inherit;
+    min-height: 1.5rem;
     display: inline-flex;
     gap: 0.25rem;
     align-items: center;
@@ -407,17 +426,24 @@ const columns: { key: SortKey; label: string }[] = [
     text-decoration: none;
   }
   .sort-indicator {
-    font-size: 0.6rem;
-    min-width: 0.6rem;
+    display: inline-flex;
+    min-width: 0.75rem;
   }
   .salary-cell,
-  .updated-cell {
-    font-variant-numeric: tabular-nums;
+  .updated-cell,
+  .action-date {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
     white-space: nowrap;
+  }
+  .action-date {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
   .updated-cell {
     color: var(--text-muted);
-    font-size: 0.8rem;
+    font-size: 0.8125rem;
   }
   .text-right {
     text-align: right;

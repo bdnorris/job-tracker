@@ -5,8 +5,11 @@
 }
 
 .add-job h2 {
-  font-size: 1.05rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   font-weight: 600;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
 }
 
 .add-job h2:focus {
@@ -68,7 +71,7 @@
 }
 
 .hint {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   color: var(--text-muted);
 }
 
@@ -112,10 +115,12 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  border-left: 3px solid var(--warning);
-  padding-left: 0.75rem;
+  font-size: 0.8125rem;
+  color: var(--text-primary);
+  background-color: var(--warning-subtle);
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-md);
+  padding: 0.6rem 0.85rem;
 }
 
 .banner {
@@ -155,7 +160,7 @@
 }
 
 .review-form label {
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--text-secondary);
   display: flex;
@@ -169,13 +174,15 @@
 }
 
 .source-tag {
-  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
   font-weight: 500;
+  letter-spacing: 0.04em;
   padding: 0 0.4rem;
-  border-radius: var(--radius-full);
-  background-color: var(--primary-subtle);
-  color: var(--primary);
-  border: 1px solid var(--primary-border);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-strong);
 }
 
 .source-tag.is-edited {

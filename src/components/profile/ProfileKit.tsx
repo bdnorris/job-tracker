@@ -5,6 +5,15 @@ import { validateProfileData, type ProfileSection } from '../../lib/validation/p
 import { formatBullets, formatEducationEntry, formatWorkEntry, formatYearMonth, stripBullet } from '../../lib/profile/format';
 import './ProfileKit.css';
 
+/** Same 12px stroke set as Icon.astro, for this island. */
+function KitIcon({ d }: { d: string }) {
+  return (
+    <svg class="kit-icon" viewBox="0 0 12 12" aria-hidden="true" focusable="false">
+      <path d={d} />
+    </svg>
+  );
+}
+
 export interface KitItem {
   id: string;
   data: Record<string, any>;
@@ -155,7 +164,7 @@ function Section({ section, items, announce, onCreate, onUpdate, onDelete, onMov
         <h2 id={headingId}>{labels.title}</h2>
         {!adding && (
           <button type="button" class="btn btn-sm" data-focus={`add-${section}`} onClick={() => setAdding(true)}>
-            + Add {labels.singular}
+            <KitIcon d="M6 1.5v9M1.5 6h9" /> Add {labels.singular}
           </button>
         )}
       </header>
@@ -286,7 +295,7 @@ function ItemCard({ section, item, index, count, announce, onUpdate, onDelete, o
             disabled={index === 0}
             onClick={() => onMove(-1)}
           >
-            ↑
+            <KitIcon d="M6 10.5v-9M2.5 5 6 1.5 9.5 5" />
           </button>
           <button
             type="button"
@@ -296,7 +305,7 @@ function ItemCard({ section, item, index, count, announce, onUpdate, onDelete, o
             disabled={index === count - 1}
             onClick={() => onMove(1)}
           >
-            ↓
+            <KitIcon d="M6 1.5v9M2.5 7 6 10.5 9.5 7" />
           </button>
           <button type="button" class="btn btn-sm" aria-label={`Edit ${name}`} onClick={() => setEditing(true)}>
             Edit

@@ -8,7 +8,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.25rem 0.75rem;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
 }
 
 .kit-section {
@@ -28,12 +28,15 @@
 }
 
 .kit-section-header h2 {
-  font-size: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   font-weight: 600;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
 }
 
 .kit-empty {
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   color: var(--text-muted);
 }
 
@@ -82,11 +85,12 @@
 
 .kit-field dt {
   grid-area: label;
-  font-size: 0.7rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  font-family: var(--font-mono);
+  letter-spacing: var(--label-tracking);
 }
 
 .kit-field dd {
@@ -120,11 +124,12 @@
 }
 
 .kit-bullets-label {
-  font-size: 0.7rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  font-family: var(--font-mono);
+  letter-spacing: var(--label-tracking);
   margin-bottom: 0.25rem;
 }
 
@@ -140,7 +145,7 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 0.5rem;
   align-items: center;
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   padding-left: 0.625rem;
   border-left: 2px solid var(--border-subtle);
 }
@@ -210,4 +215,14 @@
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+
+.kit-icon {
+  width: 0.75rem;
+  height: 0.75rem;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: square;
 }

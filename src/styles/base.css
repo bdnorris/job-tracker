@@ -89,6 +89,26 @@ input, textarea {
   font-family: var(--font-mono);
 }
 
+/* Section heading: the board's column-head voice over a 2px rule. */
+.section-head {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: var(--label-tracking);
+  text-transform: uppercase;
+  color: var(--text-primary);
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--rule);
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;

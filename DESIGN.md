@@ -56,6 +56,18 @@ typography:
     fontWeight: 500
     lineHeight: 0.95
     letterSpacing: "-0.03em"
+  display-sub:
+    fontFamily: "JetBrains Mono Variable, ui-monospace, SFMono-Regular, Menlo, monospace"
+    fontSize: "1.75rem"
+    fontWeight: 500
+    lineHeight: 0.95
+    letterSpacing: "-0.03em"
+  headline-lg:
+    fontFamily: "Inter Tight Variable, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif"
+    fontSize: "1.75rem"
+    fontWeight: 700
+    lineHeight: 1.15
+    letterSpacing: "-0.02em"
   headline:
     fontFamily: "Inter Tight Variable, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif"
     fontSize: "1.375rem"
@@ -73,6 +85,11 @@ typography:
     fontWeight: 400
     lineHeight: 1.45
     fontFeature: "\"tnum\" 1, \"cv11\" 1"
+  body-ui:
+    fontFamily: "Inter Tight Variable, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif"
+    fontSize: "0.875rem"
+    fontWeight: 400
+    lineHeight: 1.4
   body-sm:
     fontFamily: "Inter Tight Variable, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif"
     fontSize: "0.8125rem"
@@ -89,6 +106,11 @@ typography:
     fontWeight: 600
     lineHeight: 1.2
     letterSpacing: "0.08em"
+  section-head:
+    fontFamily: "JetBrains Mono Variable, ui-monospace, SFMono-Regular, Menlo, monospace"
+    fontSize: "0.75rem"
+    fontWeight: 600
+    letterSpacing: "0.12em"
   label:
     fontFamily: "JetBrains Mono Variable, ui-monospace, SFMono-Regular, Menlo, monospace"
     fontSize: "0.6875rem"
@@ -213,7 +235,7 @@ The tracker reads like an airport gate: an ink departures band answers "what lea
 
 Structure comes from rules and material, not from shadows or colour blocks. The shell (header and departures band) stays ink in both themes. Everything below it sits on panel grey, with white pass surfaces in light mode and dark slate passes in dark mode. Colour carries meaning only: yellow means "now" (due today, active, just moved, selected text), red means overdue, and nothing else gets a hue. The world deliberately rejects the category default of soft white kanban cards under a row of stat tiles.
 
-Scope: this pass restyled the board home (`/`), its departures band and the app shell that every route inherits. The other pages (job detail, list, add job, application kit/profile, settings, and the print job and prep sheets) inherit these tokens, the shell, and the base button/input/badge styles, but they have not been individually restyled into the Gate Board vernacular yet. When restyling them, extend from this document rather than from their current page-local CSS.
+Scope: the board home (`/`), its departures band, the app shell, the job detail header (a full-width pass) and the jobs list are built in the Gate Board vernacular. Every page shares the type ramp below, mono section heads over a 2px rule, the 12px stroke icon set (`src/components/Icon.astro`) and neutral ink-outline stage badges. The add-job form, application kit, settings and print sheets use the shared components and ramp but keep their own page layouts.
 
 **Key Characteristics:**
 - Ink shell and departures band in both themes, with panel-grey ground and white passes below
@@ -270,10 +292,12 @@ A near-monochrome ink-and-grey palette with exactly one signal colour for "now" 
 
 ### Hierarchy
 - **Display Clock** (500, 3.5rem, 0.95, -0.04em, mono): the next interview's clock time in the departures band. One per screen.
-- **Display Count** (500, 2.75rem, 0.95, -0.03em, mono): pipeline stage counts in the departures tiles; the 7/30-day window counts step down to 1.75rem in Shell Muted.
-- **Headline** (700, 1.375rem, -0.02em, sans): page title ("Board"), followed by a mono uppercase count.
+- **Display Count** (500, 2.75rem, 0.95, -0.03em, mono): pipeline stage counts in the departures tiles; the 7/30-day window counts step down to **Display Sub** (1.75rem) in Shell Muted; the Closed rail count uses Headline size in mono.
+- **Headline Large** (700, 1.75rem, 1.15, -0.02em, sans): the job's own title on its detail pass and print sheet; 1.375rem below 768px.
+- **Headline** (700, 1.375rem, -0.02em, sans): every page title ("Board", "All Jobs", "Settings"), optionally followed by a mono uppercase count.
+- **Section Head** (600, 0.75rem, 0.12em, mono, uppercase, `.section-head`): card and section headings over a 2px ink rule, the same voice as the board's column heads.
 - **Title** (650, 0.9375rem, 1.25, -0.01em, sans): pass titles; also the next-interview title at 1rem/600.
-- **Body** (400, 1rem, 1.45, sans, tabular figures and cv11 on): base text. Tables and secondary lines use 0.875rem; pass segment values and action text use **Body Small** (0.8125rem).
+- **Body** (400, 1rem, 1.45, sans, tabular figures and cv11 on): base text. Tables, nav and secondary lines use **Body UI** (0.875rem); pass segment values and action text use **Body Small** (0.8125rem).
 - **Data** (500, 0.8125rem, 0.04em, mono, uppercase): departures dates and status, pass due dates (0.6875rem), pay values (0.75rem, no wrap).
 - **Button** (600, 0.75rem, 0.08em, mono, uppercase): all `.btn` labels; Sign Out uses the same voice at 0.6875rem.
 - **Label** (500, 0.6875rem, 0.12em, mono, uppercase): column heads, panel heads (600), table headers, the `.label` utility. **Label Pass** (0.625rem) is the FROM / PAY / MODE / NEXT segment voice inside a pass.

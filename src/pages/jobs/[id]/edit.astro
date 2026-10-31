@@ -1,4 +1,5 @@
 ---
+import Icon from '../../../components/Icon.astro';
 import Layout from '../../../layouts/Layout.astro';
 import config from '../../../config';
 import { getJobById } from '../../../db/queries/jobs';
@@ -16,7 +17,7 @@ const skillsString = (job.skills || []).map((s) => s.name).join(', ');
 <Layout title={`Edit ${job.title}`}>
   <div class="page-container">
     <div class="page-header">
-      <a href={`/jobs/${job.id}`} class="back-link">← Cancel and return</a>
+      <a href={`/jobs/${job.id}`} class="back-link"><Icon name="arrow-left" /> Cancel and return</a>
       <h1>Edit Job Posting</h1>
     </div>
 
@@ -196,11 +197,15 @@ const skillsString = (job.skills || []).map((s) => s.name).join(', ');
   .back-link {
     font-size: 0.875rem;
     color: var(--text-muted);
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2rem;
     margin-bottom: 0.5rem;
   }
   .page-header h1 {
-    font-size: 1.75rem;
+    font-size: 1.375rem;
+    letter-spacing: -0.02em;
     font-weight: 700;
   }
   .error-banner {
